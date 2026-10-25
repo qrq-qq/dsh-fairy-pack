@@ -59,6 +59,15 @@ node .\uninstall.mjs
 
 ---
 
+## 如果装完打不开
+
+DSH 里任何一条客户端插件激活失败，整个界面都起不来。真遇到：
+
+1. 任务管理器结束 DeepSeek Harness
+2. 编辑 `%USERPROFILE%\.dsh\profiles\desktop\package.json`，从 `dsh.profile.bundles` 删掉三个包名
+3. 或用同目录 `package.json.bak-fairy-pack-<时间戳>` 覆盖
+4. 重开后用 `install.ps1 --only splash` 分步装，逐条排除
+
 ## 兼容性
 
 皮肤的部分样式依赖 DeepSeek Harness 前端打包后的类名（形如 `.Dc7zOa_root`），这些名字每版构建会变。

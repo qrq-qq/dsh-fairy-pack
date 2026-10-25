@@ -18,7 +18,7 @@
 2. 下载这个文件到临时目录：
    https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/dsh-fairy-pack-1.0.0.zip
    用 Get-FileHash 校验 SHA256 必须是：
-   80c9500f244bc2f335272b28aeb456b1c553fd93b09bbc0ebb32b514862d2542
+   56ac1abc3c4648df28ec3a14410413dd0cc72bdc0029a2df28387c4d2d57817d
 
 3. 解压到 %TEMP%\fairy-pack，然后解除网络隔离标记：
    Get-ChildItem -Recurse | Unblock-File
@@ -45,7 +45,7 @@
 Install "Fairy Pack" on this Windows machine. Execute the steps yourself; do not just print instructions.
 
 1. Preflight: %USERPROFILE%\.dsh\profiles\desktop\package.json must exist. Find node.exe (PATH, or search %USERPROFILE%\.dsh\dsh-runtimes).
-2. Download https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/dsh-fairy-pack-1.0.0.zip and verify SHA256 = 80c9500f244bc2f335272b28aeb456b1c553fd93b09bbc0ebb32b514862d2542
+2. Download https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/dsh-fairy-pack-1.0.0.zip and verify SHA256 = 56ac1abc3c4648df28ec3a14410413dd0cc72bdc0029a2df28387c4d2d57817d
 3. Extract to %TEMP%\fairy-pack and run: Get-ChildItem -Recurse | Unblock-File
 4. Run: powershell -NoProfile -ExecutionPolicy Bypass -File "<extracted>\install.ps1"
 5. Verify the two plugin folders exist under %USERPROFILE%\.dsh\plugins, both names appear in dsh.profile.bundles, and %USERPROFILE%\.dsh\AGENT.md was written (backup .bak-fairy-pack-* expected).
@@ -80,6 +80,11 @@ On any error, paste the raw error; do not guess.
 
 皮肤依赖 DSH 前端打包类名（`.Dc7zOa_root` 这类哈希），升级 DSH 后可能部分样式失效。
 若安装后界面无变化，先确认 DSH 版本；0.2.1-rc.3 已实测，其余版本未验证。
+
+## 运行时是分卷的
+
+发布件里 `fairy-runtime.zip` 拆成 `part01`、`part02` 两段（合计 2.15 GB，GitHub 单文件上限 2 GB）。
+插件按顺序边下边拼，不需要手动合并；**两段都要下，缺一段解不开**。
 
 ## 装完打不开怎么办
 

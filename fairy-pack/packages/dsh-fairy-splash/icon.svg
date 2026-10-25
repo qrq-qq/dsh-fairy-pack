@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Fairy core geometry adapted from MaxiumZero/TZFairy (local personal use). -->
+  <rect width="64" height="64" rx="14" fill="#05070e"/>
+  <g transform="translate(2 2) scale(0.1)">
+    <circle cx="300" cy="300" r="270" fill="#3978ed" opacity=".35"/>
+    <circle cx="300" cy="300" r="266" fill="none" stroke="#3978ed" stroke-width="14"/>
+    <circle cx="300" cy="300" r="266" fill="none" stroke="#ffffff" stroke-width="6"/>
+    <circle cx="300" cy="300" r="220" fill="#193499"/>
+    <path d="M 300 50 L 338 105 L 262 105 Z M 550 300 L 495 338 L 495 262 Z M 300 550 L 262 495 L 338 495 Z M 50 300 L 105 262 L 105 338 Z" fill="#193499"/>
+    <circle cx="300" cy="300" r="180" fill="#ffffff"/>
+    <circle cx="300" cy="300" r="132" fill="#b4c4ee"/>
+    <circle cx="300" cy="300" r="96" fill="#4285e8"/>
+    <circle cx="300" cy="300" r="60" fill="#173082"/>
+    <circle cx="372" cy="372" r="42" fill="#ffffff"/>
+  </g>
+</svg>

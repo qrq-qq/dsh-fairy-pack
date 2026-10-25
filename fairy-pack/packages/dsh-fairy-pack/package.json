@@ -1,0 +1,41 @@
+{
+  "name": "dsh-fairy-pack",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Fairy Pack: H.D.D. skin + Fairy voice + persona preset for DeepSeek Harness",
+  "license": "MIT",
+  "author": "Fairy Pack",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/<your-account>/dsh-fairy-pack.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "fairy",
+    "theme",
+    "tts"
+  ],
+  "dependencies": {
+    "dsh-fairy-splash": "^1.0.0",
+    "dsh-fairy-voice": "^1.0.0"
+  },
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

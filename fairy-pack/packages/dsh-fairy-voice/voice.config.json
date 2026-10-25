@@ -1,0 +1,23 @@
+{
+  "port": 9880,
+  "device": "cpu",
+  "autoStart": false,
+  "python": "",
+  "pythonPath": "",
+  "nltkData": "",
+  "apiScript": "",
+  "serviceDir": "",
+  "bertPath": "",
+  "hubertPath": "",
+  "t2sWeights": "",
+  "vitsWeights": "",
+  "refAudio": "",
+  "refText": "",
+  "runtime": {
+    "enabled": false,
+    "url": "",
+    "sha256": "",
+    "root": "",
+    "modelRoot": ""
+  }
+}

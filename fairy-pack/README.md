@@ -1,0 +1,87 @@
+# Fairy Pack · H.D.D. 界面皮肤 + Fairy 语音 + Fairy 人格
+
+把整套「Fairy」体验装进本地 DeepSeek Harness：新会话界面的全息核心与开机影片、回复朗读、以及依据游戏剧情重建的人格档案。
+
+## 内容
+
+| 模块 | npm 包 | 作用 |
+| --- | --- | --- |
+| 界面皮肤 | `dsh-fairy-splash` | H.D.D. 开机动画、新会话界面核心与标题、侧边栏徽标、对话区核心与溶解带 |
+| 语音 | `dsh-fairy-voice` | 回复播放按钮、自动朗读、GPT-SoVITS 桥接、首次启动自举运行时 |
+| 元包 | `dsh-fairy-pack` | 只做登记：把上面两个一起挂进插件树 |
+| 人格 | `persona/Fairy.md` | 写入 `~/.dsh/AGENT.md` |
+
+## 方式一：一键安装（不装 Node 生态）
+
+```powershell
+# 解压后
+./install.ps1
+```
+
+脚本会把两个插件复制到 `%USERPROFILE%\.dsh\plugins`、写进 profile 的 `package.json` 与 `dsh.profile.bundles`、链接进 `node_modules`，最后写入人格（旧文件自动备份）。
+`node install.mjs --dry-run` 可先看计划；`--no-persona` 跳过人格。
+
+## 方式二：npm 安装（有 DSH 插件管理时）
+
+```bash
+dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
+```
+
+只装一个就是元包，两个内核跟依赖一起进来。人格仍需手动：把 `persona/Fairy.md` 复制到 `~/.dsh/AGENT.md`。
+
+## 发布（维护者）
+
+```bash
+npm login
+node scripts/publish.mjs --pack                 # 只打包，检查内容
+node scripts/publish.mjs --publish              # 发布三个包
+node scripts/publish.mjs --publish --bump patch # 先升版本再发
+```
+
+发布前把三个 `package.json` 里的 `repository.url` 换成你的仓库地址。
+
+## 语音：两条路
+
+### A. 自举（推荐）
+
+编辑 `~/.dsh/fairy-voice/voice.config.json` 的 `runtime` 块，填运行时 zip 地址与 sha256；zip 根目录放 `fairy-runtime.json` 清单。首次启动自动下载、校验、解包、把绝对路径写回配置，之后不再联网。
+模型另打一个 zip，由清单里的 `model.url` 指向。格式见 [packages/dsh-fairy-voice/README.md](packages/dsh-fairy-voice/README.md)。
+
+### B. 手填
+
+把 11 个路径填成你本地 GPT-SoVITS 的绝对路径，`autoStart` 改 `true`。
+
+不启用语音不影响皮肤与人格，点播放只会亮红灯。
+
+## 开屏动画与应用图标
+
+- **开屏动画**：`assets/boot.mp4`（6 MB）随皮肤包一起分发，只在应用冷启动时播一次，F5 不重播。
+- **标签页图标**：插件启动时把 favicon 换成 `/fairy-splash/v1/icon-64.png`，无需额外操作。
+- **应用图标 / 托盘图标**：需要改安装目录，插件做不到，用附带脚本：
+
+```powershell
+node scripts/apply-app-icon.mjs            # 备份并替换 resources/icon.png 与 tray.ico
+node scripts/apply-app-icon.mjs --restore  # 还原
+```
+
+客户端升级会覆盖这两个文件，升级后重跑一次即可。
+
+## 自定义
+
+- 皮肤尺寸与配色在 `packages/dsh-fairy-splash/client.js` 的 CSS 段，改完重启。
+- 人格在 `persona/Fairy.md`，改完重跑 `install.mjs`。
+- 运行时清单可加 `nltkData` 等字段，未填的按空处理。
+
+## 卸载
+
+```bash
+node uninstall.mjs
+```
+
+摘掉 bundles 与依赖、删除插件目录、用最近一次备份还原 `AGENT.md`。
+
+## 已知限制
+
+- 模型权重不随包分发（体积 + 自定义音色），必须自己托管 zip。
+- 皮肤与语音是两个插件内核；元包只负责一起登记，别指望它们合成一个 bundle。
+- 开机影片只在冷启动播一次，F5 不重播。

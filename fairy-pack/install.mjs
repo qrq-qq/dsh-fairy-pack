@@ -30,7 +30,11 @@ const profile = opt('profile', 'desktop');
 const profileDir = path.join(dshHome, 'profiles', profile);
 const pluginsDir = path.join(dshHome, 'plugins');
 const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 13);
-const PACKAGES = ['dsh-fairy-splash', 'dsh-fairy-voice'];
+const ALL_PACKAGES = ['dsh-agent-md', 'dsh-fairy-splash', 'dsh-fairy-voice'];
+const ONLY = opt('only', '');
+const PACKAGES = ONLY === ''
+  ? ALL_PACKAGES
+  : ALL_PACKAGES.filter((name) => ONLY.split(',').map((s) => s.trim()).includes(name.replace('dsh-', '').replace('fairy-', '')) || ONLY.split(',').map((s) => s.trim()).includes(name));
 
 const say = (...a) => console.log(...a);
 const plan = [];
@@ -106,8 +110,10 @@ for (const p of plan) p.fn();
 say('安装完成。');
 say('');
 say('下一步：');
+say('  0. 只装了 ' + PACKAGES.join(', ') + (ONLY === '' ? '' : '（--only 模式）'));
 say('  1. 完全退出 DeepSeek Harness（不是关窗口，是托盘退出）。');
 say('  2. 重新打开，新会话界面出现 H.D.D. 核心与开机影片。');
-say('  3. 语音默认关闭；要启用，编辑 ' + path.join(pluginsDir, 'dsh-fairy-voice', 'voice.config.json') + ' 填入本地 GPT-SoVITS 路径，再把 autoStart 改成 true。');
+say('  3. 语音首次启动会在后台下载约 1.9 GB 运行时与音色（' + path.join(dshHome, 'fairy-voice', 'service.log') + ' 可看进度）。');
+say('     早先装过语音、想改成本地已有的运行时：编辑 ' + path.join(pluginsDir, 'dsh-fairy-voice', 'voice.config.json') + '。');
 say('');
 say('回滚：node uninstall.mjs');

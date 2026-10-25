@@ -1,6 +1,7 @@
 window.__ModuleLoader__.load({
   id: 'dsh-fairy-splash',
   factory(require) {
+    try {
     const React = require('react')
     const h = React.createElement
 
@@ -1487,8 +1488,11 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
     }
 
     return {
-      inject: ['slots', 'locale'],
+      inject: ['slots'],
       apply(ctx) {
+        let locale
+        try { locale = ctx.get ? ctx.get('locale') : undefined } catch { locale = undefined }
+        try {
         /*
          * A throwing effect takes the whole plugin down, and a failed client
          * entry aborts the web boot — a blank window instead of a lost skin.
@@ -1525,7 +1529,7 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
         }, 'fairy-splash: skin stylesheet')
 
         effect(
-          () => ctx.locale.register('fairy-splash', {
+          () => locale && locale.register('fairy-splash', {
             zh: {
               greetingMorning: '早安，主人。H.D.D. 系统已就绪，Fairy 随时听你差遣。',
               greetingNoon: '午安，主人。H.D.D. 系统已就绪，Fairy 随时听你差遣。',
@@ -1558,7 +1562,7 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
           'fairy-splash: copy',
         )
 
-        const t = ctx.locale.bind('fairy-splash')
+        const t = locale ? locale.bind('fairy-splash') : ((key) => key)
 
         effect(() => {
           if (!document.body) return undefined
@@ -1655,7 +1659,7 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
             name: 'shell.overlay',
             id: 'fairy-splash',
             order: 80,
-          }, (props) => h(FairySplash, { ...props, t, locale: ctx.locale }))),
+          }, (props) => h(FairySplash, { ...props, t, locale }))),
           'fairy-splash: overlay',
         )
 
@@ -1664,8 +1668,16 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
         // the single-slot brand entries are owned by the shell and cannot be
         // re-registered safely from a bundle, so an additive attempt would
         // abort the whole plugin. CSS keeps the shell's own structure intact.
-
+        }
+        catch (error) {
+          console.error('[fairy-splash] apply failed', error)
+        }
       },
+    }
+    }
+    catch (error) {
+      console.error('[fairy-splash] factory failed', error)
+      return { inject: [], apply() {} }
     }
   },
 })

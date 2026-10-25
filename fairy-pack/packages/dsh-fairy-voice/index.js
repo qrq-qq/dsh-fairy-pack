@@ -36,6 +36,7 @@ const DEFAULT_CONFIG = {
 }
 
 let config = null
+let configStamp = ''
 let child = null
 let startingSince = 0
 let warming = false
@@ -61,8 +62,25 @@ async function configFile() {
   }
 }
 
+async function configStampOf() {
+  try {
+    const file = await configFile()
+    const info = await stat(file)
+    return file + ':' + String(info.mtimeMs) + ':' + String(info.size)
+  }
+  catch {
+    return 'none'
+  }
+}
+
 async function loadConfig() {
-  if (config !== null) return config
+  /*
+   * Re-read whenever the file on disk changes. A config edited while the
+   * client is running used to stay invisible until a full restart, which
+   * looked exactly like "the voice system stopped working".
+   */
+  const stamp = await configStampOf()
+  if (config !== null && stamp === configStamp) return config
   let raw = {}
   try {
     raw = JSON.parse(await readFile(await configFile(), 'utf8'))
@@ -71,6 +89,9 @@ async function loadConfig() {
     await log('config read failed: ' + String(error && error.message ? error.message : error))
   }
   let merged = Object.assign({}, DEFAULT_CONFIG, raw)
+  if (merged.runtime !== undefined && merged.runtime.enabled === true && merged.runtime.root === '') {
+    merged.runtime = Object.assign({}, merged.runtime, { root: join(STATE_DIR, 'runtime') })
+  }
   if (merged.runtime !== undefined && merged.runtime.enabled === true && (!merged.python || !merged.apiScript)) {
     try {
       const booted = await ensureVoiceRuntime(merged, log)
@@ -86,6 +107,7 @@ async function loadConfig() {
     }
   }
   config = merged
+  configStamp = await configStampOf()
   return config
 }
 
@@ -296,6 +318,9 @@ async function synthesize(text) {
       signal: controller.signal,
     })
     if (!upstream.ok) {
+      /* Keep the service's own reason: it names the bad path or parameter. */
+      const detail = await upstream.text().catch(() => '')
+      await log('upstream ' + String(upstream.status) + ': ' + detail.slice(0, 400).replace(/\s+/g, ' '))
       throw Object.assign(new Error('upstream-failed'), { code: 'upstream-failed' })
     }
     return Buffer.from(await upstream.arrayBuffer())
@@ -360,6 +385,7 @@ async function handle(req, res, url) {
 export const inject = ['webServer']
 
 export function apply(ctx) {
+  try {
   ctx.effect(
     () => ctx.webServer.register({
       kind: 'prefix',
@@ -405,4 +431,8 @@ export function apply(ctx) {
       child = null
     }
   }, 'fairy-voice: service supervision')
+  }
+  catch (error) {
+    console.error('[fairy-voice] host apply failed', error)
+  }
 }

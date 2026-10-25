@@ -1,6 +1,7 @@
 window.__ModuleLoader__.load({
   id: 'dsh-fairy-voice',
   factory(require) {
+    try {
     const React = require('react')
     const h = React.createElement
 
@@ -501,6 +502,7 @@ window.__ModuleLoader__.load({
     }
 
     function apply(ctx) {
+      try {
       mount(ctx, 'fairy-voice: message action', 'conversation.chat.assistant-actions', { id: 'fairy-voice-action', order: 30 }, VoiceAction)
       mount(ctx, 'fairy-voice: composer toggle', 'conversation.input.left', { id: 'fairy-voice-toggle', order: 60 }, VoiceToggle)
 
@@ -511,8 +513,17 @@ window.__ModuleLoader__.load({
           stopSpeaking()
         }
       }, 'fairy-voice: auto read watcher')
+      }
+      catch (error) {
+        console.error('[fairy-voice] apply failed', error)
+      }
     }
 
     return { apply, inject: ['slots'] }
+    }
+    catch (error) {
+      console.error('[fairy-voice] factory failed', error)
+      return { inject: [], apply() {} }
+    }
   },
 })

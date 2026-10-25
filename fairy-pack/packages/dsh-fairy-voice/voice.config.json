@@ -1,7 +1,7 @@
 {
   "port": 9880,
   "device": "cpu",
-  "autoStart": false,
+  "autoStart": true,
   "python": "",
   "pythonPath": "",
   "nltkData": "",
@@ -14,9 +14,9 @@
   "refAudio": "",
   "refText": "",
   "runtime": {
-    "enabled": false,
-    "url": "",
-    "sha256": "",
+    "enabled": true,
+    "url": "https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/fairy-runtime.zip",
+    "sha256": "e2e7a0fdbdddcd54ef678ab6cf6286c8b61d98d562b38b6e9dab7353aea53a9e",
     "root": "",
     "modelRoot": ""
   }

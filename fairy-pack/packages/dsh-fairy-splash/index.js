@@ -159,8 +159,13 @@ async function serve(req, res) {
 
 /** Host half: serves the boot video and backdrop image to the page. */
 export function apply(ctx) {
+  try {
   ctx.effect(
     () => ctx.webServer.register({ kind: 'prefix', path: ROUTE, handler: serve }),
     'fairy-splash: splash assets',
   )
+  }
+  catch (error) {
+    console.error('[fairy-splash] host apply failed', error)
+  }
 }

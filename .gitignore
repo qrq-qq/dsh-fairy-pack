@@ -1,0 +1,6 @@
+*.zip
+*.tgz
+*.log
+node_modules/
+release/
+dist/

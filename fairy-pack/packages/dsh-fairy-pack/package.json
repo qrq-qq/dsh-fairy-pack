@@ -1,13 +1,14 @@
 {
   "name": "dsh-fairy-pack",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Fairy Pack: H.D.D. skin + Fairy voice + persona preset for DeepSeek Harness",
   "license": "MIT",
   "author": "Fairy Pack",
   "repository": {
     "type": "git",
-    "url": "https://github.com/<your-account>/dsh-fairy-pack.git"
+    "url": "https://github.com/qrq-qq/dsh-fairy-pack.git",
+    "directory": "packages/dsh-fairy-pack"
   },
   "publishConfig": {
     "access": "public"
@@ -23,7 +24,7 @@
     "tts"
   ],
   "dependencies": {
-    "dsh-fairy-splash": "^1.0.0",
+    "dsh-fairy-splash": "^1.0.1",
     "dsh-fairy-voice": "^1.0.0"
   },
   "exports": {

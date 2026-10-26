@@ -1,6 +1,6 @@
 {
   "name": "dsh-fairy-splash",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "H.D.D. boot film, holographic core hero and docked Fairy core for DeepSeek Harness Web UI",
   "exports": {
@@ -38,7 +38,8 @@
   "author": "Fairy Pack",
   "repository": {
     "type": "git",
-    "url": "https://github.com/<your-account>/dsh-fairy-pack.git"
+    "url": "https://github.com/qrq-qq/dsh-fairy-pack.git",
+    "directory": "packages/dsh-fairy-splash"
   },
   "publishConfig": {
     "access": "public"

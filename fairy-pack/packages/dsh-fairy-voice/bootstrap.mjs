@@ -12,7 +12,7 @@
  */
 import { createWriteStream } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { inflateRawSync } from 'node:zlib'
 import { Readable } from 'node:stream'
@@ -20,35 +20,78 @@ import { pipeline } from 'node:stream/promises'
 
 const CHUNK = 1 << 20
 
-async function download(url, dest, log) {
+/**
+ * 分卷下载，带断点续传。
+ *
+ * 每一卷先写到 `<dest>.pN`，中断后下次从已有字节数继续（HTTP Range）。
+ * 全部到齐后按顺序拼成 `dest`、校验 sha256、删除分卷。
+ * 单连接是刻意的：并行分片在这类 CDN 上收益不稳定，而续传能救回最常见的失败——
+ * 下到 90% 断线。
+ */
+async function download(url, dest, log, expectSha) {
   const parts = Array.isArray(url) ? url : [url]
   await mkdir(dirname(dest), { recursive: true })
-  const hash = createHash('sha256')
-  let got = 0
-  const file = createWriteStream(dest)
+
+  let totalHave = 0
   for (let i = 0; i < parts.length; i += 1) {
+    const tmp = dest + '.p' + i
     const label = parts.length > 1 ? '第 ' + (i + 1) + '/' + parts.length + ' 段 ' : ''
-    const res = await fetch(parts[i], { redirect: 'follow' })
-    if (!res.ok || res.body === null) throw new Error('下载失败 HTTP ' + res.status + '：' + parts[i])
-    let lastLog = 0
-    const base = got
-    const source = Readable.fromWeb(res.body)
-    source.on('data', (chunk) => {
-      hash.update(chunk)
-      got += chunk.length
-      if (got - base - lastLog > 64 * CHUNK) {
-        lastLog = got - base
-        void log(label + '下载中 ' + (got / 1048576).toFixed(1) + ' MB')
+    let have = 0
+    try { have = (await stat(tmp)).size } catch { have = 0 }
+    let resumed = have > 0
+    let guard = 0
+    while (guard < 3) {
+      guard += 1
+      const headers = have > 0 ? { Range: 'bytes=' + have + '-' } : {}
+      const res = await fetch(parts[i], { redirect: 'follow', headers })
+      if (res.status === 416) break
+      if (!res.ok || res.body === null) throw new Error('下载失败 HTTP ' + res.status + '：' + parts[i])
+      if (have > 0 && res.status !== 206) {
+        // 服务端不认 Range，只能整卷重来
+        await rm(tmp, { force: true })
+        have = 0
+        resumed = false
+        continue
       }
-    })
-    await new Promise((resolve, reject) => {
-      source.on('end', resolve)
-      source.on('error', reject)
-      source.pipe(file, { end: false })
-    })
+      if (resumed) await log(label + '续传自 ' + (have / 1048576).toFixed(1) + ' MB')
+      const out = createWriteStream(tmp, { flags: have > 0 ? 'a' : 'w' })
+      let got = have
+      let lastLog = got
+      const source = Readable.fromWeb(res.body)
+      source.on('data', (chunk) => {
+        got += chunk.length
+        if (got - lastLog > 64 * CHUNK) {
+          lastLog = got
+          void log(label + '下载中 ' + (got / 1048576).toFixed(1) + ' MB')
+        }
+      })
+      await new Promise((resolve, reject) => {
+        source.on('end', resolve)
+        source.on('error', reject)
+        source.pipe(out)
+      })
+      have = (await stat(tmp)).size
+      break
+    }
+    totalHave += have
   }
-  await new Promise((resolve, reject) => { file.end(); file.on('finish', resolve); file.on('error', reject) })
-  return { bytes: got, sha256: hash.digest('hex') }
+
+  // 拼接并校验
+  const hash = createHash('sha256')
+  const out = createWriteStream(dest)
+  for (let i = 0; i < parts.length; i += 1) {
+    const tmp = dest + '.p' + i
+    const buf = await readFile(tmp)
+    hash.update(buf)
+    await new Promise((resolve, reject) => out.write(buf, (e) => (e ? reject(e) : resolve())))
+  }
+  await new Promise((resolve, reject) => { out.end(); out.on('finish', resolve); out.on('error', reject) })
+  const sha = hash.digest('hex')
+  if (expectSha && sha.toLowerCase() !== String(expectSha).toLowerCase()) {
+    throw new Error('校验失败：期望 ' + expectSha + '，实际 ' + sha)
+  }
+  for (let i = 0; i < parts.length; i += 1) await rm(dest + '.p' + i, { force: true })
+  return { bytes: totalHave, sha256: sha }
 }
 
 /** 极简 zip 解包：只处理 stored 与 deflate，够用于发布包。 */
@@ -115,14 +158,27 @@ export async function ensureVoiceRuntime(config, log) {
 
   const manifestPath = join(root, 'fairy-runtime.json')
   if (!(await exists(manifestPath))) {
-    if (!runtime.url) throw new Error('运行时缺失且未配置 runtime.url')
-    await log('首次启动：开始下载语音运行时')
     const zip = join(root, 'runtime.zip')
-    const got = await download(runtime.url, zip, log)
-    if (runtime.sha256 && got.sha256.toLowerCase() !== runtime.sha256.toLowerCase()) {
+    const pre = join(root, 'fairy-runtime.zip')
+    if (await exists(pre)) {
+      // 手动下载的捷径：把 fairy-runtime.zip 放进 runtime 目录即可跳过下载
+      await log('检测到已就位的 fairy-runtime.zip，跳过下载')
       await rm(zip, { force: true })
-      throw new Error('运行时校验失败：期望 ' + runtime.sha256 + ' 实际 ' + got.sha256)
+      await rename(pre, zip)
     }
+    else {
+      if (!runtime.url) throw new Error('运行时缺失且未配置 runtime.url')
+      await log('首次启动：开始下载语音运行时')
+      await download(runtime.url, zip, log, runtime.sha256)
+    }
+    if (runtime.sha256) {
+      const real = await fileSha256(zip)
+      if (real.toLowerCase() !== String(runtime.sha256).toLowerCase()) {
+        await rm(zip, { force: true })
+        throw new Error('运行时校验失败：期望 ' + runtime.sha256 + ' 实际 ' + real)
+      }
+    }
+    const got = { bytes: (await stat(zip)).size }
     await log('下载完成 ' + (got.bytes / 1048576).toFixed(1) + ' MB，开始解包')
     const n = await unzip(zip, root)
     await rm(zip, { force: true })

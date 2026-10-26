@@ -31,7 +31,8 @@
   "author": "Fairy Pack",
   "repository": {
     "type": "git",
-    "url": "https://github.com/<your-account>/dsh-fairy-pack.git"
+    "url": "https://github.com/qrq-qq/dsh-fairy-pack.git",
+    "directory": "packages/dsh-fairy-voice"
   },
   "publishConfig": {
     "access": "public"

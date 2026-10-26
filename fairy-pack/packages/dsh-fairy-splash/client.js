@@ -24,6 +24,78 @@ window.__ModuleLoader__.load({
         /* ignore */
       }
     })()
+    /*
+     * The fairy stage follows the conversation column instead of the window.
+     * Opening the right task panel (or collapsing the left sidebar) moves the
+     * centre of the conversation, so the core and its halo have to move with
+     * it. better-sidebar marks that column with [data-dsh-center-col]; the
+     * shell's own conversation slot is the fallback when it is absent. The two
+     * custom properties feed .fs-hero, which every layer inside is centred on.
+     */
+    ;(() => {
+      const STAGE_LEFT = '--fairy-stage-left'
+      const STAGE_RIGHT = '--fairy-stage-right'
+      const STAGE_SELECTORS = [
+        '[data-dsh-center-col]',
+        '[data-slot="main.conversation"]',
+        '.Dc7zOa_root',
+        '.xz4KEq_root',
+      ]
+      let frame = 0
+      let stage = null
+      let resizeObserver = null
+      let lastLeft = Number.NaN
+      let lastRight = Number.NaN
+      const findStage = () => {
+        for (const selector of STAGE_SELECTORS) {
+          const el = document.querySelector(selector)
+          if (el !== null && el.getBoundingClientRect().width > 1) return el
+        }
+        return null
+      }
+      const applyStage = () => {
+        frame = 0
+        const root = document.documentElement
+        const next = findStage()
+        if (next !== stage) {
+          resizeObserver?.disconnect()
+          resizeObserver = null
+          stage = next
+          if (stage !== null && typeof ResizeObserver === 'function') {
+            resizeObserver = new ResizeObserver(scheduleStage)
+            resizeObserver.observe(stage)
+          }
+        }
+        if (stage === null) {
+          lastLeft = Number.NaN
+          lastRight = Number.NaN
+          root.style.removeProperty(STAGE_LEFT)
+          root.style.removeProperty(STAGE_RIGHT)
+          return
+        }
+        const rect = stage.getBoundingClientRect()
+        const left = Math.round(rect.left)
+        const right = Math.max(0, Math.round(window.innerWidth - rect.right))
+        if (left === lastLeft && right === lastRight) return
+        lastLeft = left
+        lastRight = right
+        root.style.setProperty(STAGE_LEFT, left + 'px')
+        root.style.setProperty(STAGE_RIGHT, right + 'px')
+      }
+      const scheduleStage = () => {
+        if (frame === 0 && typeof window.requestAnimationFrame === 'function') {
+          frame = window.requestAnimationFrame(applyStage)
+        }
+      }
+      /* The column's own ResizeObserver covers the panel opening, closing and
+         being dragged. The interval is the safety net for a wholesale swap of
+         the centre column, and it costs one rect read per tick. Deliberately no
+         subtree MutationObserver: a streaming reply would schedule it on every
+         token. */
+      window.addEventListener('resize', scheduleStage, { passive: true })
+      scheduleStage()
+      window.setInterval(scheduleStage, 1200)
+    })()
     const CORE_GLITCH_CYCLE = 7200
     const CORE_EPOCH = performance.now()
     const coreGlitchPhase = () => `${-((performance.now() - CORE_EPOCH) % CORE_GLITCH_CYCLE)}ms`
@@ -556,8 +628,11 @@ html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) .Dc7zOa_headerUt
 /* ---- HOLLOW DEEP DIVE SYSTEM hero, only in the no-session state ---- */
 .fs-hero {
   position: fixed;
-  left: var(--dsh-sidebar-width, 280px);
-  right: 0;
+  /* The stage is glued to the conversation column, not to the window: opening
+     the right task panel or collapsing the left sidebar moves it. client.js
+     writes these two properties from better-sidebar's [data-dsh-center-col]. */
+  left: var(--fairy-stage-left, var(--dsh-sidebar-width, 280px));
+  right: var(--fairy-stage-right, 0px);
   top: var(--dsh-windows-titlebar-height, 0px);
   bottom: 0;
   z-index: 2147482100;
@@ -808,7 +883,12 @@ html[data-fairy-skin] body:has([data-phase="hero"]) [class*="_headline"]:has([cl
 /* A single small core above an open chat, independent of header slots. */
 .fs-chat-orb {
   position: fixed;
-  left: calc(var(--dsh-sidebar-width, 280px) + (100vw - var(--dsh-sidebar-width, 280px)) / 2);
+  /* Same stage as the hero core: centre of the conversation column, not of
+     the window, so the compact chat core tracks the right task panel too. */
+  left: calc(
+    var(--fairy-stage-left, var(--dsh-sidebar-width, 280px)) +
+    (100vw - var(--fairy-stage-left, var(--dsh-sidebar-width, 280px)) - var(--fairy-stage-right, 0px)) / 2
+  );
   top: calc(var(--dsh-windows-titlebar-height, 0px) + 8px);
   width: 32px; height: 32px;
   transform: translateX(-50%);

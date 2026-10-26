@@ -12,7 +12,7 @@
 
 ### 1. 下载
 
-到 [Releases](../../releases) 下载 **`dsh-fairy-pack-1.0.0.zip`**（7 MB）。
+到 [Releases](../../releases) 下载 **`dsh-fairy-pack-1.0.1.zip`**（7 MB）。
 
 ### 2. 运行
 

@@ -15,8 +15,11 @@
   "refText": "",
   "runtime": {
     "enabled": true,
-    "url": "https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/fairy-runtime.zip",
-    "sha256": "e2e7a0fdbdddcd54ef678ab6cf6286c8b61d98d562b38b6e9dab7353aea53a9e",
+    "url": [
+      "https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/fairy-runtime.zip.part01",
+      "https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/fairy-runtime.zip.part02"
+    ],
+    "sha256": "d4b8a4465ea47babfd0897e6b810b32195eb457762a4e708bbe3492c0fc2794e",
     "root": "",
     "modelRoot": ""
   }

@@ -38,7 +38,7 @@ node scripts/publish.mjs --publish              # 发布三个包
 node scripts/publish.mjs --publish --bump patch # 先升版本再发
 ```
 
-发布前把三个 `package.json` 里的 `repository.url` 换成你的仓库地址。
+三个包的 `repository` 已指向仓库 `qrq-qq/dsh-fairy-pack`，并各自带上 `directory` 子路径，发布前不需要再改。
 
 ## 语音：两条路
 

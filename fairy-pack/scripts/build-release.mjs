@@ -79,9 +79,8 @@ async function buildRuntime() {
   const zip = join(OUT, 'fairy-runtime.zip');
   rmSync(zip, { force: true });
   console.log('压缩中（原生 .NET，7.5 GB 大约 20–40 分钟）…');
-  ps('Add-Type -AssemblyName System.IO.Compression.FileSystem;' +
-     '[System.IO.Compression.ZipFile]::CreateFromDirectory("' + RUNTIME_SRC + '","' + zip +
-     '",[System.IO.Compression.CompressionLevel]::Optimal,$true)');
+  // bsdtar 能处理超长路径；.NET 的 CreateFromDirectory 会静默漏掉深层文件
+  ps('tar -a -cf "' + zip + '" -C "' + RUNTIME_SRC + '" .');
   // 清单必须在根目录，追加而不是重压
   const P = basename(RUNTIME_SRC).replace(/[^\w.-]/g, '') || 'voice-runtime';
   const manifest = {

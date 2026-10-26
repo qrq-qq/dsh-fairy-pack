@@ -16,9 +16,9 @@
    - 找一个 node.exe：优先 PATH 里的 node；没有就在 %USERPROFILE%\.dsh\dsh-runtimes 下递归找
 
 2. 下载这个文件到临时目录：
-   https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/dsh-fairy-pack-1.0.0.zip
+   https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/dsh-fairy-pack-1.0.1.zip
    用 Get-FileHash 校验 SHA256 必须是：
-   56ac1abc3c4648df28ec3a14410413dd0cc72bdc0029a2df28387c4d2d57817d
+   5eff669fcfdbe91d3d040537f4480ba5d3fff8a3adf80a0e40fa308ae742fc67
 
 3. 解压到 %TEMP%\fairy-pack，然后解除网络隔离标记：
    Get-ChildItem -Recurse | Unblock-File
@@ -45,7 +45,7 @@
 Install "Fairy Pack" on this Windows machine. Execute the steps yourself; do not just print instructions.
 
 1. Preflight: %USERPROFILE%\.dsh\profiles\desktop\package.json must exist. Find node.exe (PATH, or search %USERPROFILE%\.dsh\dsh-runtimes).
-2. Download https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/dsh-fairy-pack-1.0.0.zip and verify SHA256 = 56ac1abc3c4648df28ec3a14410413dd0cc72bdc0029a2df28387c4d2d57817d
+2. Download https://github.com/qrq-qq/dsh-fairy-pack/releases/download/v1.0.0/dsh-fairy-pack-1.0.1.zip and verify SHA256 = 5eff669fcfdbe91d3d040537f4480ba5d3fff8a3adf80a0e40fa308ae742fc67
 3. Extract to %TEMP%\fairy-pack and run: Get-ChildItem -Recurse | Unblock-File
 4. Run: powershell -NoProfile -ExecutionPolicy Bypass -File "<extracted>\install.ps1"
 5. Verify the two plugin folders exist under %USERPROFILE%\.dsh\plugins, both names appear in dsh.profile.bundles, and %USERPROFILE%\.dsh\AGENT.md was written (backup .bak-fairy-pack-* expected).

@@ -1,11 +1,12 @@
 {
   "name": "dsh-fairy-splash",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "H.D.D. boot film, holographic core hero and docked Fairy core for DeepSeek Harness Web UI",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
+    "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },

@@ -12,15 +12,22 @@
 | 元包 | `dsh-fairy-pack` | 只做登记：把上面三个一起挂进插件树 |
 | 人格 | `persona/Fairy.md` | 写入 `~/.dsh/AGENT.md` |
 
-## 方式一：一键安装（不装 Node 生态）
+## 方式一：一键安装（推荐，无需 Node 生态）
 
 ```powershell
 # 解压后
 ./install.ps1
 ```
 
-脚本会把三个插件复制到 `%USERPROFILE%\.dsh\plugins`、写进 profile 的 `package.json` 与 `dsh.profile.bundles`、链接进 `node_modules`，最后写入人格（旧文件自动备份）。
-`node install.mjs --dry-run` 可先看计划；`--no-persona` 跳过人格。
+一条命令做完四件事，装完自动重启 DSH，不需要再手动关开：
+
+1. 把 `dsh-fairy-splash` / `dsh-fairy-composer` / `dsh-fairy-voice` / `dsh-agent-md` **整目录替换**进 `%USERPROFILE%\.dsh\plugins`——旧副本先删掉，不会再残留 1.0.0 的旧界面。
+2. 重连 profile 的 `node_modules` 与 `package.json`：依赖指向新副本，`dsh.profile.bundles` 自动去重。
+3. 逐包自检：版本号、`exports` 是否放行 `./package.json`、`client.js` 里的界面标记（`chat-bg`、`data-fairy-voice-rail`、`_composerSeat`），全过才继续。
+4. 自检通过后 8 秒自动关闭并重开 DeepSeek Harness，新界面直接生效。
+
+自检不通过会打 FAIL 并以退出码 1 停下，不会留下「装了但界面还是旧的」这种状态。
+`--dry-run` 看计划，`--verify-only` 只自检，`--no-restart` 不自动重启，`--no-persona` 跳过人格，`--profile <名字>` 指定非 desktop 的 profile。
 
 ## 方式二：npm 安装（有 DSH 插件管理时）
 
@@ -31,6 +38,13 @@ dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 只装一个就是元包，三个内核跟依赖一起进来。人格仍需手动：把 `persona/Fairy.md` 复制到 `~/.dsh/AGENT.md`。
 
 ## 更新记录
+
+### 1.0.6
+
+- **安装器重写**：旧包整目录替换 → 装完逐项自检 → 通过后自动重启 DSH。别人装完不需要任何手动操作。
+- 自检覆盖：包版本、`exports` 是否放行 `./package.json`、`client.js` 里的界面标记、`node_modules` 链接是否指向新副本。
+- `dsh-fairy-splash` 升到 1.0.3、`dsh-fairy-composer` 升到 1.0.1：两包都补上 `exports` 的 `./package.json`（此前按包名解析 manifest 会被导出表挡住，皮肤可能整块不加载）。
+- profile 里重复的 bundle 记录会被去重；`--verify-only` 可单独复检。
 
 ### 1.0.5
 

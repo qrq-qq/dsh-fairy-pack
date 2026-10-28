@@ -30,6 +30,10 @@ const ASSETS = new Map([
     file: fileURLToPath(new URL('./assets/app.ico', import.meta.url)),
     type: 'image/x-icon',
   }],
+  ['/fairy-splash/v1/chat-bg.jpg', {
+    file: fileURLToPath(new URL('./assets/chat-bg.jpg', import.meta.url)),
+    type: 'image/jpeg',
+  }],
 ])
 
 const ROUTE = '/fairy-splash'
@@ -159,13 +163,8 @@ async function serve(req, res) {
 
 /** Host half: serves the boot video and backdrop image to the page. */
 export function apply(ctx) {
-  try {
   ctx.effect(
     () => ctx.webServer.register({ kind: 'prefix', path: ROUTE, handler: serve }),
     'fairy-splash: splash assets',
   )
-  }
-  catch (error) {
-    console.error('[fairy-splash] host apply failed', error)
-  }
 }

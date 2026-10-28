@@ -485,8 +485,50 @@ html[data-fairy-skin] :is(.xz4KEq_column h1, .xz4KEq_column h2, .xz4KEq_column h
 html[data-fairy-skin] .xz4KEq_column :is(p, li) { color: #eaf2ff !important; }
 html[data-fairy-skin] ._3GBCTG_title,
 html[data-fairy-skin] ._3GBCTG_summaryText { color: #a9c1e8 !important; }
+/*
+ * The composer rides on the same grey rail as the left column: the art stops
+ * at the message area, the rail takes over underneath, and the glass capsule
+ * floats inside it with the same inset as the rail's other cards. The seam is
+ * a single dark hairline rather than a long fade, so the boundary reads as a
+ * deliberate frame instead of a gradient smudge.
+ */
 html[data-fairy-skin] .Dc7zOa_composerSeat {
-  background: linear-gradient(180deg, rgba(5, 7, 14, 0) 0%, rgba(5, 7, 14, .92) 46%) !important;
+  background: linear-gradient(180deg, #4a4f57 0%, #3b4048 100%) !important;
+  box-shadow: none !important;
+}
+
+/*
+ * Reserve the voice card's column on the capsule itself. The wrapper around it
+ * is nested, so neither the seat's padding nor a margin on that wrapper ever
+ * reached the capsule — which is why the card kept sitting on top of the send
+ * button. 144px = 124 card + 10 rim + 10 of air.
+ */
+/*
+ * Same surface for whichever composer component is mounted. The hash in the
+ * class name changes between shell builds, and the new-session screen can mount
+ * its own composer element; matching the stable suffix keeps both screens on
+ * one treatment instead of one grey band and one bare strip.
+ */
+html[data-fairy-skin] [class*="_composerSeat"],
+html[data-fairy-skin] [class*="_composerStack"] {
+  background: linear-gradient(180deg, #4a4f57 0%, #3b4048 100%) !important;
+  box-shadow: none !important;
+}
+
+/*
+ * New-session screen: drop whatever width cap the app puts on its hero
+ * composer, and nothing else. No forced width, no margins — the capsule then
+ * fills exactly the space the chat screen gives it, which is the parity asked
+ * for. Forcing width here is what broke the layout earlier.
+ */
+html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_composerSeat [class*="_card"] {
+  max-width: none !important;
+}
+/* Any trailing spacer inside the seat loses its own margins too. */
+html[data-fairy-skin] .Dc7zOa_composerSeat > :last-child {
+  margin-top: 2px !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
 }
 /*
  * New-session (hero) state: the app centers the composer seat in the
@@ -500,6 +542,35 @@ html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-con
 html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_composerSeat {
   margin-top: auto;
 }
+/* Hero composer width is left to the app: forcing 100% on its wrapper crushed
+   the capsule against the window edge and hid it behind the bottom seam. */
+/*
+ * Frame depth. Both grey rails now read as physical slabs instead of flat
+ * fills: one radius variable rounds all four corners, the rim is built from a
+ * light hairline on top, a dark one underneath and a shadow that falls away
+ * from the seam, and each edge facing the conversation carries a short
+ * gradient so the surface turns away instead of stopping dead.
+ */
+html[data-fairy-skin] .BynINW_sidebarCol {
+  --fairy-frame-radius: 16px;
+  position: relative;
+  border-radius: var(--fairy-frame-radius) !important;
+  background-clip: padding-box !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .13),
+    inset 0 -1px 0 rgba(0, 0, 0, .40),
+    inset 1px 0 0 rgba(255, 255, 255, .07),
+    inset -1px 0 0 rgba(0, 0, 0, .32),
+    0 12px 28px -16px rgba(0, 0, 0, .58) !important;
+}
+/* The rail is flush with the window edge, so its corners go back to square:
+   rounding them only ate into the frame and left slivers of backdrop showing
+   at the top-left and bottom-left. The composer keeps its radius. */
+html[data-fairy-skin] .BynINW_sidebarCol {
+  border-radius: 0 !important;
+}
+/* The composer's top seam: the picture hands over to the rail through a short
+   falloff, and the rail's own top rim carries the highlight. */
 html[data-fairy-skin] .RlGAzG_card {
   background: linear-gradient(180deg, rgba(10, 20, 40, .96), rgba(6, 12, 24, .97)) !important;
   border: 1px solid rgba(102, 138, 255, .27) !important;
@@ -520,21 +591,45 @@ html[data-fairy-skin] .RlGAzG_card:focus-within {
    current and the older RlGAzG names are carried so the frame survives a shell
    rebuild. Shape: a soft glass capsule, one hairline, no heavy outline. */
 html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, .07) 0%, rgba(255, 255, 255, .015) 22%, rgba(255, 255, 255, 0) 46%),
-    linear-gradient(180deg, rgba(16, 28, 54, .82) 0%, rgba(8, 14, 30, .90) 100%) !important;
-  backdrop-filter: blur(24px) saturate(160%) brightness(1.03);
-  -webkit-backdrop-filter: blur(24px) saturate(160%) brightness(1.03);
-  border: 1px solid rgba(176, 202, 255, .16) !important;
-  border-top-color: rgba(228, 240, 255, .26) !important;
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, .03) 22%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(160deg, rgba(57, 120, 237, .44) 0%, rgba(25, 52, 153, .54) 52%, rgba(9, 18, 52, .66) 100%) !important;
+  /* No backdrop blur: it re-samples everything behind the capsule, and during a
+     conversation switch that content repaints continuously — the single most
+     expensive thing on this surface. The tint below carries the look instead. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(110, 150, 245, .22) !important;
+  border-top-color: rgba(196, 214, 255, .38) !important;
   border-radius: 20px !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .14),
     inset 0 -16px 28px -24px rgba(0, 0, 0, .55),
     0 18px 44px rgba(0, 0, 0, .46),
     0 2px 8px rgba(0, 0, 0, .30),
     0 0 34px rgba(92, 132, 255, .10) !important;
   transition: border-color 200ms ease, box-shadow 240ms ease;
+}
+/* Same liquid as the rail cards, so the capsule and the sidebar are visibly
+   one material. --fairy-liquid-* is shared, so dimming it once dims both. */
+html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card)::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 58% at 24% 26%, var(--fairy-liquid-1), transparent 72%),
+    radial-gradient(38% 50% at 76% 64%, var(--fairy-liquid-2), transparent 74%),
+    radial-gradient(46% 62% at 52% 88%, var(--fairy-liquid-3), transparent 76%),
+    radial-gradient(26% 34% at 62% 34%, var(--fairy-liquid-4), transparent 78%);
+  /* Static: an animated layer here keeps the compositor busy for no visible
+     gain, since the capsule is mostly covered by its own text and toolbar. */
+  animation: none !important;
 }
 html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card):focus-within {
   border-color: rgba(160, 192, 255, .34) !important;
@@ -1204,8 +1299,8 @@ html[data-fairy-skin] :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
     linear-gradient(180deg, rgba(104, 144, 236, .11) 0%, rgba(28, 48, 104, .16) 56%, rgba(7, 14, 30, .22) 100%) !important;
   backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
   -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
-  border: 1px solid rgba(206, 226, 255, .24) !important;
-  border-top-color: rgba(240, 248, 255, .44) !important;
+  border: 1px solid rgba(122, 162, 255, .34) !important;
+  border-top-color: rgba(206, 222, 255, .52) !important;
   border-radius: 14px !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .38),
@@ -1261,8 +1356,8 @@ html[data-fairy-skin] :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
     linear-gradient(180deg, rgba(88, 128, 224, .12) 0%, rgba(22, 40, 90, .16) 54%, rgba(6, 12, 28, .22) 100%) !important;
   backdrop-filter: blur(22px) saturate(175%) brightness(1.05);
   -webkit-backdrop-filter: blur(22px) saturate(175%) brightness(1.05);
-  border: 1px solid rgba(196, 220, 255, .13) !important;
-  border-top-color: rgba(234, 246, 255, .28) !important;
+  border: 1px solid rgba(110, 150, 245, .22) !important;
+  border-top-color: rgba(196, 214, 255, .38) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .22),
     inset 0 -16px 26px -22px rgba(0, 0, 0, .50),
@@ -1388,36 +1483,41 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(._2H3hWW_brandName, .wtg9ga_brandNa
 html[data-fairy-skin] .BynINW_sidebarCol :is(._2H3hWW_brandName, .wtg9ga_brandName)::after {
   color: rgba(226, 236, 250, .55) !important;
 }
-/* A translucent fill would bleach against the pale rail, so the cards carry the
-   same gradient stack with a near-opaque navy body: the frosted look survives,
-   the rail behind it does not wash the glass out. */
+/*
+ * Glass, opened up and tinted to the core's own palette. The icon in
+ * icon.svg is #3978ed ring, #193499 deep core, #b4c4ee pale highlight over a
+ * #05070e ground; the panes below are those three hues thinned into a body,
+ * so the rail reads as a piece of the same object as the Fairy core instead of
+ * a generic navy slab. Alphas sit around .5–.7: raise toward .80 for a heavier
+ * pane, drop toward .45 for a thinner one.
+ */
 html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .26) 0%, rgba(255, 255, 255, .06) 15%, rgba(255, 255, 255, 0) 36%),
     linear-gradient(104deg, rgba(255, 255, 255, 0) 16%, rgba(226, 238, 255, .14) 24%, rgba(255, 255, 255, 0) 34%),
-    linear-gradient(160deg, rgba(34, 56, 110, .92) 0%, rgba(14, 26, 56, .93) 52%, rgba(6, 12, 26, .94) 100%) !important;
+    linear-gradient(160deg, rgba(57, 120, 237, .46) 0%, rgba(25, 52, 153, .56) 52%, rgba(9, 18, 52, .68) 100%) !important;
 }
 html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, .09) 16%, rgba(255, 255, 255, 0) 38%),
     linear-gradient(104deg, rgba(255, 255, 255, 0) 14%, rgba(238, 246, 255, .20) 24%, rgba(255, 255, 255, 0) 36%),
-    linear-gradient(160deg, rgba(46, 72, 134, .93) 0%, rgba(18, 32, 66, .94) 52%, rgba(8, 15, 32, .95) 100%) !important;
+    linear-gradient(160deg, rgba(74, 138, 250, .54) 0%, rgba(32, 64, 178, .64) 52%, rgba(11, 22, 60, .74) 100%) !important;
 }
 html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .03) 16%, rgba(255, 255, 255, 0) 40%),
     linear-gradient(146deg, rgba(168, 198, 255, .10) 0%, rgba(96, 134, 226, .03) 32%, rgba(255, 255, 255, 0) 56%),
-    linear-gradient(180deg, rgba(30, 50, 100, .90) 0%, rgba(12, 22, 48, .92) 54%, rgba(5, 10, 24, .93) 100%) !important;
+    linear-gradient(180deg, rgba(48, 104, 224, .42) 0%, rgba(24, 50, 148, .52) 54%, rgba(8, 16, 46, .64) 100%) !important;
 }
 html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .13) 0%, rgba(255, 255, 255, .03) 13%, rgba(255, 255, 255, 0) 32%),
     linear-gradient(150deg, rgba(152, 184, 255, .08) 0%, rgba(92, 130, 222, .03) 30%, rgba(255, 255, 255, 0) 54%),
-    linear-gradient(180deg, rgba(28, 48, 96, .88) 0%, rgba(11, 20, 44, .91) 52%, rgba(5, 10, 24, .92) 100%) !important;
+    linear-gradient(180deg, rgba(44, 98, 216, .40) 0%, rgba(22, 46, 140, .50) 52%, rgba(7, 14, 42, .62) 100%) !important;
 }
 /* The list's scroll fade paints var(--dsw-specific-sidebar-fill), which is now
    pale — over the dark glass it drew a light band at the bottom. Fade it into
@@ -1428,8 +1528,8 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_fade, ._9lTDKa_fade) {
 /* Against the pale rail the pane's bottom rim would read as a white shelf;
    keep the light rim on top only and let the base fall away dark. */
 html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea)::after {
-  border: 1px solid rgba(150, 180, 235, .14) !important;
-  border-top-color: rgba(240, 248, 255, .30) !important;
+  border: 1px solid rgba(112, 152, 248, .24) !important;
+  border-top-color: rgba(200, 218, 255, .40) !important;
   box-shadow: none !important;
 }
 /* The console's deep inner bottom shadow reads as a black band on a pale rail.
@@ -1611,22 +1711,96 @@ html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
   transition: none !important;
 }
 
+/*
+ * Liquid inside the glass. The four hues of the core — #3978ed ring, #4285e8
+ * mid, #193499 deep, #b4c4ee highlight — are stacked as three wide radial
+ * blobs on a pseudo-element that drifts and breathes on a 26s cycle. The card
+ * gets isolation:isolate so the blob paints above the pane's own background
+ * but below its label, and overflow:hidden keeps it inside the rounded rim.
+ * Only transform is animated, so the layer is composited and no gradient is
+ * re-rasterised per frame; the drift stops while a rail is being dragged and
+ * for prefers-reduced-motion.
+ */
+html[data-fairy-skin] {
+  --fairy-liquid-1: rgba(57, 120, 237, .28);
+  --fairy-liquid-2: rgba(66, 133, 232, .20);
+  --fairy-liquid-3: rgba(25, 52, 153, .32);
+  --fairy-liquid-4: rgba(180, 196, 238, .18);
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(
+  .wtg9ga_newSession, ._2H3hWW_newSession,
+  .wtg9ga_panelList, ._2H3hWW_panelList,
+  .GAkraW_listArea, ._9lTDKa_listArea
+) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(
+  .wtg9ga_newSession, ._2H3hWW_newSession,
+  .wtg9ga_panelList, ._2H3hWW_panelList,
+  .GAkraW_listArea, ._9lTDKa_listArea
+)::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 58% at 24% 26%, var(--fairy-liquid-1), transparent 72%),
+    radial-gradient(38% 50% at 76% 64%, var(--fairy-liquid-2), transparent 74%),
+    radial-gradient(46% 62% at 52% 88%, var(--fairy-liquid-3), transparent 76%),
+    radial-gradient(26% 34% at 62% 34%, var(--fairy-liquid-4), transparent 78%);
+  animation: fairy-liquid 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes fairy-liquid {
+  0%   { transform: translate3d(-5%, -4%, 0) scale(1.06) rotate(-2deg); }
+  33%  { transform: translate3d(4%, 3%, 0) scale(1.12) rotate(1.5deg); }
+  66%  { transform: translate3d(-2%, 6%, 0) scale(1.08) rotate(-1deg); }
+  100% { transform: translate3d(6%, -3%, 0) scale(1.14) rotate(2deg); }
+}
+/* Quiet while the rail is being resized, and for anyone who asked the system
+   for less motion. */
+html[data-fairy-skin][data-fairy-resizing] .BynINW_sidebarCol :is(
+  .wtg9ga_newSession, ._2H3hWW_newSession,
+  .wtg9ga_panelList, ._2H3hWW_panelList,
+  .GAkraW_listArea, ._9lTDKa_listArea
+)::before {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-fairy-skin] .BynINW_sidebarCol :is(
+    .wtg9ga_newSession, ._2H3hWW_newSession,
+    .wtg9ga_panelList, ._2H3hWW_panelList,
+    .GAkraW_listArea, ._9lTDKa_listArea
+  )::before {
+    animation: none;
+  }
+}
+
 /* ---- rail stats: balance + this conversation's tokens ---- */
 .fs-rail-stats {
   margin: 8px 2px 2px;
   padding: 8px 10px 9px;
   border-radius: 14px;
-  border: 1px solid rgba(196, 220, 255, .13);
-  border-top-color: rgba(234, 246, 255, .26);
-  background:
-    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
-    linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .03) 16%, rgba(255, 255, 255, 0) 40%),
-    linear-gradient(180deg, rgba(30, 50, 100, .90) 0%, rgba(12, 22, 48, .92) 54%, rgba(5, 10, 24, .93) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 18px rgba(0, 0, 0, .18);
-  color: #e8f0ff;
+  /* Flat, deeper, no glass: solid grey with a single 1px rim. The grain layer,
+     the specular wash and the inner highlights are all gone, so the card reads
+     as machined metal instead of frosted glass. */
+  border: 1px solid rgba(255, 255, 255, .07);
+  background: linear-gradient(180deg, #31363e 0%, #282d34 54%, #22262d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    0 6px 14px rgba(0, 0, 0, .26);
+  color: #e6ecf5;
   font-size: 12px;
   line-height: 1.5;
   flex: none;
+}
+/* The blue liquid field would tint the grey; the voice card has none, so the
+   balance card goes without as well. */
+html[data-fairy-skin] .fs-rail-stats::before {
+  display: none !important;
 }
 .fs-rs-head {
   font-size: 10px;
@@ -1641,7 +1815,7 @@ html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
   justify-content: space-between;
   gap: 8px;
 }
-.fs-rs-row span { color: #b6c8e8; }
+.fs-rs-row span { color: #c9d3e0; }
 .fs-rs-row b {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -2405,7 +2579,8 @@ html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
             const scale = { k: 1e3, m: 1e6, b: 1e9 }[(match[2] || '').toLowerCase()] || 1
             return value * scale
           }
-          // One unit only, as asked: millions of tokens.
+          /* The dock reports tokens and the row keeps that unit, billed as
+             H.D.D. power draw: one figure, millions of tokens. */
           const formatTokens = (value) => {
             const millions = value / 1e6
             const text = Number.isFinite(millions) ? String(Number(millions.toFixed(1))) : '0'
@@ -2454,7 +2629,7 @@ html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
             return sum
           }
           /* Whatever conversation is open, its own running total is what the
-             composer dock reports; show that number directly, one unit. */
+             composer dock reports; bill that directly as H.D.D. power. */
           const accumulate = () => {
             if (tokenNode === null) return
             const value = parseTokens()
@@ -2600,7 +2775,7 @@ html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
             card.className = 'fs-rail-stats'
             card.innerHTML = '<div class="fs-rs-head">H.D.D. 账户</div>'
               + '<div class="fs-rs-row"><span>余额</span><b data-fs-balance>—</b></div>'
-              + '<div class="fs-rs-row"><span>本对话算力</span><b data-fs-tokens>—</b></div>'
+              + '<div class="fs-rs-row"><span>本对话消耗电量</span><b data-fs-tokens>—</b></div>'
             if (anchor.parentElement !== null) anchor.insertAdjacentElement('afterend', card)
             else column.appendChild(card)
             balanceNode = card.querySelector('[data-fs-balance]')

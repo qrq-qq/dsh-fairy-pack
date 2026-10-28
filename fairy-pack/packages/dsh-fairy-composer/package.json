@@ -1,11 +1,12 @@
 {
   "name": "dsh-fairy-composer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Rounds the gray composer band in DeepSeek Harness Web UI and keeps a gap around the input card inside it",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
+    "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },

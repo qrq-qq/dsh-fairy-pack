@@ -577,8 +577,9 @@ window.__ModuleLoader__.load({
       const style = document.createElement('style')
       style.id = 'fairy-voice-rail-style'
       style.textContent = [
-        '[data-fairy-voice-rail]{position:fixed;left:0;top:0;width:124px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:stretch;gap:0;padding:4px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#31363e 0%,#282d34 54%,#22262d 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 6px 14px rgba(0,0,0,.26);color:#e6ecf5;font-size:12px;line-height:1.4;z-index:9000;pointer-events:auto}',
-        '[data-fairy-voice-rail] .fv-row{flex:1 1 0;display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;min-height:0;color:#c9d3e0}',
+        '[data-fairy-voice-rail]{position:fixed;left:0;top:0;width:124px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:stretch;gap:0;padding:4px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#31363e 0%,#282d34 54%,#22262d 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 6px 14px rgba(0,0,0,.26);color:#e6ecf5;font-size:12px;line-height:1.4;z-index:60;pointer-events:none}',
+        '[data-fairy-voice-rail] .fv-row{flex:1 1 0;display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;min-height:0;color:#c9d3e0;pointer-events:none}',
+        '[data-fairy-voice-rail] .fv-pill,[data-fairy-voice-rail] input[type=range]{pointer-events:auto}',
         '[data-fairy-voice-rail] .fv-label{display:inline-flex;align-items:center;gap:5px;color:#c9d3e0;white-space:nowrap}',
         '[data-fairy-voice-rail] .fv-dot{width:6px;height:6px;border-radius:50%;background:#f87171;display:inline-block;flex:0 0 auto}',
         '[data-fairy-voice-rail] .fv-pill{min-width:38px;height:18px;padding:0 7px;border-radius:999px;border:1px solid rgba(122,162,255,.34);background:linear-gradient(180deg,rgba(57,120,237,.30),rgba(9,18,52,.50));color:#eaf2ff;font:11px/1 "Segoe UI","Noto Sans SC",sans-serif;cursor:pointer;transition:border-color 160ms ease,background 160ms ease,color 160ms ease}',

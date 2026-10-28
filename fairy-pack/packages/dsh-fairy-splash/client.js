@@ -592,8 +592,10 @@ html[data-fairy-skin] .RlGAzG_card:focus-within {
    rebuild. Shape: a soft glass capsule, one hairline, no heavy outline. */
 html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card) {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
+  /* No overflow:hidden and no isolation here: both trap the composer's own
+     popovers (the + menu is a fixed-position layer anchored to this card).
+     The liquid layer below is kept inside the radius on its own. */
+  overflow: visible;
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, .03) 22%, rgba(255, 255, 255, 0) 46%),
@@ -616,10 +618,35 @@ html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card) {
 }
 /* Same liquid as the rail cards, so the capsule and the sidebar are visibly
    one material. --fairy-liquid-* is shared, so dimming it once dims both. */
+/*
+ * The "+" menu (input-trigger) is rendered inside the conversation tree, so the
+ * shell's own frame still clipped its top edge even after the card stopped
+ * clipping. Open the frame only while a popover is actually up: the menu then
+ * paints in full, and the chat frame keeps its rounded clip the rest of the
+ * time. :has() is evaluated live, so nothing has to be toggled by script.
+ */
+html[data-fairy-skin] [class*="_root"][data-phase="active"]:has([role="menu"], [role="listbox"], [class*="_menu"][class*="popover"]) {
+  overflow: visible !important;
+}
+html[data-fairy-skin] [class*="_composerStack"],
+html[data-fairy-skin] [class*="_composerSeat"] {
+  overflow: visible !important;
+}
+/* The measured clipper: the popover's top edge lands exactly on the scroll
+   body's frame, so that frame clips it. Open only while a popover is up.
+   That frame owns an 11px scrollbar gutter (our own ::-webkit-scrollbar width)
+   with scrollbar-gutter:stable; dropping the overflow would also drop the
+   gutter and visibly widen the composer, so the same 11px comes back as
+   padding and the width stays put. */
+html[data-fairy-skin] [class*="_scrollBody"]:has([role="menu"], [class*="_menu"]) {
+  overflow: visible !important;
+  padding-right: 11px !important;
+}
 html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card)::before {
   content: "";
   position: absolute;
-  inset: -35%;
+  inset: 0;
+  border-radius: inherit;
   z-index: -1;
   pointer-events: none;
   background:

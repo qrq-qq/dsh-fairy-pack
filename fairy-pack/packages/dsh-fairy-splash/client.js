@@ -7,6 +7,15 @@ window.__ModuleLoader__.load({
 
     const VIDEO_URL = '/fairy-splash/v1/boot.mp4'
     const POSTER_URL = '/fairy-splash/v1/poster.jpg'
+    /*
+     * boot.mp4 runs 14.5 s, but its picture is finished at 12.9 s: the frames
+     * from 13.0 s to the end are a static black hold (~68 bytes each). Waiting
+     * for `ended` therefore parks the ready console behind ~1.9 s of black.
+     * The splash instead hands over while the last live frame is still dimming,
+     * so the fade and the film's own fade-to-black finish together.
+     */
+    const BOOT_HANDOFF_SECONDS = 1.85
+    const BOOT_FADE_MS = 160
     const ICON_URL = '/fairy-splash/v1/icon-64.png'
     /* 把标签页图标换成 H.D.D. 核心；失败不影响任何功能。 */
     ;(() => {
@@ -81,6 +90,9 @@ window.__ModuleLoader__.load({
         lastRight = right
         root.style.setProperty(STAGE_LEFT, left + 'px')
         root.style.setProperty(STAGE_RIGHT, right + 'px')
+        /* Lets the drag shield notice a rail being resized even when the
+           handle it is dragged by has no class we can recognise. */
+        document.dispatchEvent(new Event('fairy-stage-resize'))
       }
       const scheduleStage = () => {
         if (frame === 0 && typeof window.requestAnimationFrame === 'function') {
@@ -95,6 +107,59 @@ window.__ModuleLoader__.load({
       window.addEventListener('resize', scheduleStage, { passive: true })
       scheduleStage()
       window.setInterval(scheduleStage, 1200)
+    })()
+    /*
+     * Drag-time paint shield. While a rail is being resized the app re-lays out
+     * the conversation on every pointer move; on top of that the glass panes
+     * stack three 22-28px backdrop blurs, which is what turns a drag into a
+     * slideshow. A pointerdown on a divider flips html[data-fairy-resizing] for
+     * the length of the gesture and the stylesheet drops blur, shadows and
+     * transitions until it ends.
+     */
+    ;(() => {
+      let active = false
+      const clear = () => {
+        if (!active) return
+        active = false
+        document.documentElement.removeAttribute('data-fairy-resizing')
+      }
+      const DIVIDERS = '[class*="_divider"], [class*="_resize"], [class*="_resizer"], [class*="_gutter"]'
+      const isDivider = (node) => {
+        if (!(node instanceof Element)) return false
+        if (node.closest(DIVIDERS) !== null) return true
+        return document.body.hasAttribute('data-dsh-sidebar-dragging')
+      }
+      document.addEventListener('pointerdown', (event) => {
+        if (!isDivider(event.target)) return
+        active = true
+        document.documentElement.setAttribute('data-fairy-resizing', '')
+      }, true)
+      /*
+       * Second trigger, independent of class names: three layout changes inside
+       * 350ms means something is being dragged, even if the handle is called
+       * something else in the next build. The flag then expires 220ms after the
+       * last change, so a slow drag still reads as one gesture.
+       */
+      let hits = []
+      let settle = 0
+      document.addEventListener('fairy-stage-resize', () => {
+        const now = performance.now()
+        hits.push(now)
+        hits = hits.filter((t) => now - t < 350)
+        if (hits.length >= 3) {
+          active = true
+          document.documentElement.setAttribute('data-fairy-resizing', '')
+        }
+        window.clearTimeout(settle)
+        settle = window.setTimeout(() => {
+          hits = []
+          clear()
+        }, 220)
+      })
+      window.addEventListener('pointerup', clear, true)
+      window.addEventListener('pointercancel', clear, true)
+      window.addEventListener('blur', clear)
+      document.addEventListener('mouseup', clear, true)
     })()
     const CORE_GLITCH_CYCLE = 7200
     const CORE_EPOCH = performance.now()
@@ -151,7 +216,7 @@ html[data-fairy-skin][data-fairy-splash-caption] .BynINW_frame:before {
   position: fixed; inset: 0; z-index: 2147483000;
   display: flex; align-items: center; justify-content: center;
   background: #000; overflow: hidden; pointer-events: auto;
-  opacity: 1; transition: opacity 280ms cubic-bezier(.4, 0, .2, 1);
+  opacity: 1; transition: opacity ${BOOT_FADE_MS}ms cubic-bezier(.4, 0, .2, 1);
 }
 .fs-cinema.is-leaving { opacity: 0; pointer-events: none; }
 .fs-cinema video {
@@ -261,7 +326,9 @@ html[data-fairy-skin][data-fairy-splash-caption] .BynINW_frame:before {
    bundle restores the untouched app theme.
    ===================================================================== */
 :root[data-fairy-skin] {
-  --fairy-display-font: "Segoe UI", "Arial", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  /* Noto Sans SC ships with Windows as a variable face: one family covers the
+     light label cut and the heavy conversation cut without synthesised bold. */
+  --fairy-display-font: "Segoe UI", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "Arial", sans-serif;
   --fairy-orb-size: clamp(180px, min(22.5vw, 33vh), 330px);
   --fairy-orb-top: 42px;
   --fairy-chat-top: calc(var(--fairy-orb-size) + 16px);
@@ -275,7 +342,8 @@ html[data-fairy-skin] { background: #04060d !important; }
 html[data-fairy-skin] body {
   /* One typeface across the console; the heavy cut is reserved for the
      nameplate and controls, body copy keeps a readable regular weight. */
-  --dsw-font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "Arial", sans-serif !important;
+  /* Latin runs on Segoe UI (rounded humanist terminals), CJK on Noto Sans SC. */
+  --dsw-font-family: "Segoe UI", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "Arial", sans-serif !important;
   --dsw-alias-bg-base: #05070e !important;
   --dsw-alias-bg-layer-1: #070b14f2 !important;
   --dsw-alias-bg-layer-2: #0a1020e8 !important;
@@ -294,7 +362,9 @@ html[data-fairy-skin] body {
   --dsw-alias-button-primary-fill: #5b7cff !important;
   --dsw-alias-button-primary-hover: #7893ff !important;
   --dsw-focus-ring-color: #6d8cff !important;
-  --dsw-specific-sidebar-fill: #070b14 !important;
+  /* The desktop shell measures this var to paint the Windows caption overlay,
+     so it carries the title-strip tone instead of the old near-black. */
+  --dsw-specific-sidebar-fill: #3b4048 !important;
   --dsw-alias-interactive-bg-hover: rgba(103, 139, 255, .10) !important;
   --dsw-alias-interactive-bg-hover-danger: rgba(255, 96, 128, .12) !important;
   --dsw-alias-scrollbar-bg-l2: #1b2942 !important;
@@ -312,7 +382,10 @@ html[data-fairy-skin] .BynINW_frame {
   background-size: 22px 22px, 22px 22px, auto, auto, auto !important;
 }
 html[data-fairy-skin] .BynINW_frame:before {
-  background: rgba(4, 7, 14, .30) !important;
+  /* Title strip: a solid slab, deeper than the rail so the two never merge. */
+  /* Solid, so the native caption overlay (fed the same tone) meets it seamlessly. */
+  background: #3b4048 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, .55) !important;
 }
 html[data-fairy-skin] .BynINW_sidebarCol {
   background:
@@ -328,6 +401,33 @@ html[data-fairy-skin] ._2H3hWW_root {
 }
 html[data-fairy-skin] :is([data-slot="main"], [data-slot="main.conversation"], .Dc7zOa_root, .Dc7zOa_body, .Dc7zOa_scrollBody, .Dc7zOa_scroll, .Dc7zOa_column, .xz4KEq_root, .xz4KEq_scroll, .xz4KEq_column) {
   background: transparent !important;
+}
+/*
+ * Conversation backdrop. The artwork sits under a scrim so message text keeps
+ * its contrast; the scrim is a plain gradient, the picture is swappable.
+ * Set --fairy-chat-art to none to drop the picture and keep the console dark.
+ */
+:root[data-fairy-skin] {
+  --fairy-chat-art: url("/fairy-splash/v1/chat-bg.jpg");
+}
+html[data-fairy-skin] body:has(.xz4KEq_root) :is(.Dc7zOa_root, [data-slot="main.conversation"]),
+html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) :is(.Dc7zOa_root, [data-slot="main.conversation"]) {
+  background-image:
+    linear-gradient(180deg, rgba(5, 7, 14, .88) 0%, rgba(5, 7, 14, .64) 32%, rgba(5, 7, 14, .82) 100%),
+    var(--fairy-chat-art) !important;
+  background-size: cover !important;
+  background-position: 50% 14% !important;
+  background-repeat: no-repeat !important;
+  background-color: #05070e !important;
+}
+/* The new-conversation screen carries the same picture; its headline sits
+   lower and larger, so the scrim is a touch heavier there and the frame is
+   biased toward the face rather than the top edge. */
+html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) :is(.Dc7zOa_root, [data-slot="main.conversation"]) {
+  background-image:
+    linear-gradient(180deg, rgba(5, 7, 14, .92) 0%, rgba(5, 7, 14, .70) 38%, rgba(5, 7, 14, .90) 100%),
+    var(--fairy-chat-art) !important;
+  background-position: 50% 22% !important;
 }
 html[data-fairy-skin] .Dc7zOa_header {
   background: transparent !important;
@@ -373,7 +473,15 @@ html[data-fairy-skin] .cJsG2q_contextRow {
   opacity: .85;
 }
 html[data-fairy-skin] .cJsG2q_contextRow svg { color: #a8c4ff !important; }
-html[data-fairy-skin] .xz4KEq_column { color: #eaf2ff !important; }
+html[data-fairy-skin] .xz4KEq_column {
+  color: #eaf2ff !important;
+  font-weight: 550;
+  /* A hair of soft edge: rounds the terminals without smearing the glyphs. */
+  text-shadow: 0 0 .5px rgba(234, 242, 255, .60);
+  letter-spacing: .008em;
+}
+html[data-fairy-skin] :is(.cJsG2q_bubble, .RlGAzG_input, ._3GBCTG_thinkBody) { font-weight: 500; }
+html[data-fairy-skin] :is(.xz4KEq_column h1, .xz4KEq_column h2, .xz4KEq_column h3, .xz4KEq_column strong, .xz4KEq_column b) { font-weight: 700; }
 html[data-fairy-skin] .xz4KEq_column :is(p, li) { color: #eaf2ff !important; }
 html[data-fairy-skin] ._3GBCTG_title,
 html[data-fairy-skin] ._3GBCTG_summaryText { color: #a9c1e8 !important; }
@@ -408,14 +516,78 @@ html[data-fairy-skin] .RlGAzG_card:focus-within {
     0 0 0 1px rgba(103, 139, 255, .28),
     0 0 44px rgba(60, 95, 255, .16) !important;
 }
-html[data-fairy-skin] .RlGAzG_input { color: #e7efff !important; caret-color: #7d9cff !important; }
+/* Composer frame. The input bar's CSS-module hash moved to GRgSLq; both the
+   current and the older RlGAzG names are carried so the frame survives a shell
+   rebuild. Shape: a soft glass capsule, one hairline, no heavy outline. */
+html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .07) 0%, rgba(255, 255, 255, .015) 22%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, rgba(16, 28, 54, .82) 0%, rgba(8, 14, 30, .90) 100%) !important;
+  backdrop-filter: blur(24px) saturate(160%) brightness(1.03);
+  -webkit-backdrop-filter: blur(24px) saturate(160%) brightness(1.03);
+  border: 1px solid rgba(176, 202, 255, .16) !important;
+  border-top-color: rgba(228, 240, 255, .26) !important;
+  border-radius: 20px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .10),
+    inset 0 -16px 28px -24px rgba(0, 0, 0, .55),
+    0 18px 44px rgba(0, 0, 0, .46),
+    0 2px 8px rgba(0, 0, 0, .30),
+    0 0 34px rgba(92, 132, 255, .10) !important;
+  transition: border-color 200ms ease, box-shadow 240ms ease;
+}
+html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card):focus-within {
+  border-color: rgba(160, 192, 255, .34) !important;
+  border-top-color: rgba(236, 246, 255, .40) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .14),
+    inset 0 -16px 28px -24px rgba(0, 0, 0, .50),
+    0 20px 48px rgba(0, 0, 0, .48),
+    0 0 0 1px rgba(124, 158, 255, .18),
+    0 0 40px rgba(96, 138, 255, .16) !important;
+}
+html[data-fairy-skin] :is(.GRgSLq_input, .RlGAzG_input) { color: #e7efff !important; caret-color: #7d9cff !important; }
+html[data-fairy-skin] :is(.GRgSLq_placeholder, .RlGAzG_placeholder) { color: #7389ad !important; }
+/* Round controls inside the capsule. */
+html[data-fairy-skin] :is(.GRgSLq_add, .GRgSLq_primary, .RlGAzG_add) {
+  border-radius: 50% !important;
+  corner-shape: round;
+}
 html[data-fairy-skin] .RlGAzG_placeholder { color: #6f84aa !important; }
 html[data-fairy-skin] .RlGAzG_add { color: #93a8cd !important; }
 html[data-fairy-skin] ._2WTFBq_bar { background: rgba(103, 139, 255, .12) !important; }
 html[data-fairy-skin] ::selection { background: rgba(103, 139, 255, .30); color: #f4f8ff; }
-html[data-fairy-skin] ::-webkit-scrollbar { width: 9px; height: 9px; }
-html[data-fairy-skin] ::-webkit-scrollbar-track { background: #060a12; }
-html[data-fairy-skin] ::-webkit-scrollbar-thumb { background: #1b2942; border: 1px solid #24395c; border-radius: 6px; }
+/*
+ * Scrollbars sit on top of the artwork now, so the old solid track (#060a12)
+ * read as a painted stripe running the full height of the panel and collided
+ * with the panel's own edge. The track is transparent, the thumb is a floating
+ * pill inset 3px from every side (the transparent border plus background-clip
+ * is what does the insetting), and the gutter is reserved so the bar appearing
+ * never nudges the message column sideways.
+ */
+html[data-fairy-skin] ::-webkit-scrollbar { width: 11px; height: 11px; }
+html[data-fairy-skin] ::-webkit-scrollbar-track { background: transparent; }
+html[data-fairy-skin] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(122, 152, 232, .46), rgba(74, 104, 190, .34));
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+  min-height: 40px;
+}
+html[data-fairy-skin] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(152, 180, 255, .66), rgba(96, 128, 220, .50));
+  background-clip: padding-box;
+}
+html[data-fairy-skin] ::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgba(178, 200, 255, .78), rgba(112, 146, 236, .62));
+  background-clip: padding-box;
+}
+html[data-fairy-skin] ::-webkit-scrollbar-corner { background: transparent; }
+/* Reserve the gutter only where the conversation list lives, so the column does
+   not jump a few pixels the moment a long answer makes the bar appear. */
+html[data-fairy-skin] body:has(.xz4KEq_root) :is(.Dc7zOa_scroll, .xz4KEq_scroll) {
+  scrollbar-gutter: stable;
+}
 
 /* The console chrome shares the nameplate family at semibold. Body copy and
    conversation text keep their regular weight so long passages stay readable. */
@@ -671,25 +843,15 @@ html[data-fairy-skin] body:has(.xz4KEq_root) {
 html[data-fairy-skin] body:has(.xz4KEq_root) .Dc7zOa_scrollBody {
   margin-top: var(--fairy-chat-top);
 }
-/* A veil, not a mask: masking the scrollport made the chat engine re-anchor
-   and snap the view back. This layer lives beside the scroller, in the
-   conversation body, so scrolling stays untouched while a line dissolves into
-   the console as it reaches the core. */
+/*
+ * The dissolve band is off. It was built for a flat black console; over the
+ * artwork it read as a dirty smear across the middle of the conversation, so
+ * the picture runs clean from top to bottom and the core simply floats above
+ * it. Restore the old gradient if the flat console ever returns.
+ */
 html[data-fairy-skin] body:has(.xz4KEq_root) .Dc7zOa_body::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0;
-  top: calc(var(--fairy-chat-top) - 64px);
-  height: calc(var(--fairy-chat-fade) + 64px);
-  z-index: 8;
-  pointer-events: none;
-  background: linear-gradient(180deg,
-    rgba(5, 7, 14, 0) 0%,
-    rgba(5, 7, 14, .55) 34%,
-    rgba(5, 7, 14, .94) 42%,
-    rgba(5, 7, 14, .78) 60%,
-    rgba(5, 7, 14, .36) 82%,
-    rgba(5, 7, 14, 0) 100%);
+  content: none;
+  display: none;
 }
 /* The app paints its own DeepSeek fish and headline copy on the new-session
    screen; the console already stands a Fairy core and its own caption in that
@@ -844,16 +1006,33 @@ html[data-fairy-skin] body:has([data-phase="hero"]) [class*="_headline"]:has([cl
   white-space: nowrap;
   font-synthesis: none;
 }
+/* Thick, faintly rounded wordmark: a gradient face, a soft stroke that
+   rounds the terminals, and a ten-step extrusion in navy for real depth. */
 .fs-hero-title {
-  color: #f8fbff;
+  font-weight: 800;
+  color: transparent;
+  background: linear-gradient(180deg, #ffffff 0%, #f2f7ff 40%, #d8e5ff 72%, #b6ccf3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 1.2px rgba(238, 246, 255, .40);
   text-shadow:
-    0 0 30px rgba(92, 142, 255, .36),
-    0 0 84px rgba(52, 100, 255, .16),
-    0 1px 0 rgba(0, 0, 0, .42);
+    0 -1px 0 rgba(255, 255, 255, .40),
+    0 1px 0 #2a3f78,
+    0 2px 0 #263a6f,
+    0 3px 0 #223464,
+    0 4px 0 #1e2f5b,
+    0 5px 0 #1a2a52,
+    0 6px 0 #162449,
+    0 7px 0 #121e3f,
+    0 8px 0 #0f1936,
+    0 9px 0 #0b142c,
+    0 10px 0 #080f23,
+    0 16px 26px rgba(0, 0, 0, .55);
 }
 .fs-hero-rule {
   display: flex; align-items: center; gap: 16px;
-  margin-top: 11px;
+  /* clears the 10px extrusion under the wordmark */
+  margin-top: 18px;
 }
 .fs-hero-rule span {
   flex: 1; height: 1px;
@@ -961,6 +1140,17 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
   0%, 100% { transform: translate(0, 0); }
   50% { transform: translate(4px, 4px); }
 }
+/*
+ * The rail's liquid field. Four stops, run alternately, so the drift never
+ * repeats on a short cycle and never snaps back to its origin.
+ */
+@keyframes fs-liquid-drift {
+  0%   { transform: translate3d(-5%, -3%, 0) rotate(-7deg) scale(1.04); }
+  30%  { transform: translate3d(6%, 4%, 0) rotate(5deg) scale(1.16); }
+  55%  { transform: translate3d(-3%, 7%, 0) rotate(-4deg) scale(1.09); }
+  78%  { transform: translate3d(4%, -6%, 0) rotate(6deg) scale(1.13); }
+  100% { transform: translate3d(-2%, 2%, 0) rotate(-3deg) scale(1.06); }
+}
 
 
 @media (max-height: 820px) and (min-width: 861px) {
@@ -984,7 +1174,484 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
   .fs-halo::before, .fs-halo::after {
     animation: none !important;
   }
+  /* The rail still keeps its soft light, it just stops moving. */
+  html[data-fairy-skin] .BynINW_sidebarCol :is(
+    .wtg9ga_newSession, ._2H3hWW_newSession,
+    .wtg9ga_panelList, ._2H3hWW_panelList,
+    .GAkraW_listArea, ._9lTDKa_listArea
+  )::before,
+  html[data-fairy-skin] .fs-rail-stats::before {
+    animation: none !important;
+  }
   .fs-cinema { transition-duration: 1ms !important; }
+}
+
+/* =====================================================================
+   Soft-light glass, iOS / HyperOS register — new-session button and the
+   workspace pane. Layers, top to bottom: frosted grain, specular wash,
+   diagonal sheen, tinted body. Backdrop blur supplies the milkiness.
+   ===================================================================== */
+html[data-fairy-skin] {
+  --fairy-glass-grain: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAD3klEQVR42gXBWyhzcQAA8P///M9t56y8efPqRQkP8qI2OoVEkhIpHlxePHmwM1kSc87cNdawnYXtQSSpzSIvynUzm4Ncm3WYYy57+/icj+/3Q3a7nZ6bm0PZ2dmkIAg/ubm55NLSEsmy7L/FxUU8IyPjd3l5WZ+Tk/PX7XaTWVlZlNfrJViWxYeGhnAQCoWA2WxGl5eXOp7n9Y+Pj4TdbtfJskxbrVbm+vqaMplMTDgcpkRRJFOpFBQEgbi4uKBtNhtAmZmZutraWrCysvKvtbX1y+FwUCUlJX8DgcB3S0sLXF9fB2VlZVCW5W+O4+Dc3BxsbGzUgsEgbTQaNXB5eclaLBZwfHxMORwOLJVKIbvdTsuyzPb19ZHxeBxOTk6S5+fnQBRF/dvbG87zPDo7OyPdbjeD8vPzteLiYmxrawtVVFRoOzs7uNFoBF6v96u6uhrs7+/TBoPh8+DggKisrIRra2taW1sbsb29rZWWlmognU5jw8PD6OPjAw0MDGDpdJoeGBhg4vE45Xa7YSKRABaLBR4dHdGCIKCHhwd8ampKl0wmcafTiSEcx2FtbS0RDAaJ5uZmNDo6qtXV1WmSJGlVVVVEIBAAJSUlP8FgEDQ0NBDb29taYWEh8Pl8qKamhoSqquocDgeoqKj4EwqFCI7jvt1ut667u/vT5/MBjuNwr9erVVZWkicnJz95eXmk3++HTU1NXx6PhwAzMzMwkUjoeZ6nXl9fgSRJTDweJ10uF3h/f4e9vb0wnU5DQRDIu7s70uVyUYqiULOzs1BVVT14fn4Gw8PDunA4TPE8jyKRCCVJEpNMJnGTyUTc3NxgkiQhVVWx0dFRRlEUamhoiHh4eGAEQUDA4/GQsiyjiYkJ9Pb2RgwODmKnp6fU2NgYCIVCeH9/P1QUhRJFESUSCdLj8dDJZJIZGRlhPz4+KHB7ewvNZjP+/v4ORFHU3d/f4/Pz8+D09JScnp5Gh4eHelEUUTQa1ff09DCRSISyWCzMy8sL4/F49GB8fBzKsoxmZmbws7Mz1mQy6Z+enmiz2YxdXFzgY2NjtKqqtCRJ+lgsRlqtVphIJNiJiQlMURQKyrLMLC0taV1dXWh1dRVxHPe9traGysvL/ywvL2P19fXI5/P9dHZ20gsLC5/FxcUwEoloBQUF5O7uLgRTU1P6q6sriud5FAqFSLPZjL28vBB9fX1UNBqlnU4noygK5XK52HA4rLdarZSqqrTNZmNTqRQDY7EYvbe3BwwGg7a5uUlwHPe9srKCd3R0aBsbG6ioqOh3b2/vu6qq6tfv95M5OTnY+vo6aG9vB1tbW1//AedZANPwv9nHAAAAAElFTkSuQmCC");
+}
+html[data-fairy-skin] :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
+  position: relative;
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .30) 0%, rgba(255, 255, 255, .07) 15%, rgba(255, 255, 255, 0) 36%),
+    linear-gradient(104deg, rgba(255, 255, 255, 0) 16%, rgba(226, 238, 255, .16) 24%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(116deg, rgba(180, 208, 255, .20) 0%, rgba(112, 152, 238, .06) 32%, rgba(255, 255, 255, 0) 54%),
+    linear-gradient(180deg, rgba(104, 144, 236, .11) 0%, rgba(28, 48, 104, .16) 56%, rgba(7, 14, 30, .22) 100%) !important;
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
+  border: 1px solid rgba(206, 226, 255, .24) !important;
+  border-top-color: rgba(240, 248, 255, .44) !important;
+  border-radius: 14px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 -1px 0 rgba(255, 255, 255, .05),
+    inset 0 -16px 26px -20px rgba(0, 0, 0, .55),
+    inset 0 14px 26px -18px rgba(176, 210, 255, .42),
+    0 14px 32px rgba(0, 0, 0, .46),
+    0 2px 6px rgba(0, 0, 0, .34),
+    0 0 34px rgba(110, 152, 255, .18) !important;
+  transition: border-color 200ms ease, box-shadow 260ms ease, background 260ms ease, transform 200ms ease;
+}
+html[data-fairy-skin] :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .38) 0%, rgba(255, 255, 255, .11) 16%, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(104deg, rgba(255, 255, 255, 0) 14%, rgba(238, 246, 255, .24) 24%, rgba(255, 255, 255, 0) 36%),
+    linear-gradient(116deg, rgba(198, 220, 255, .26) 0%, rgba(132, 172, 255, .10) 34%, rgba(255, 255, 255, 0) 56%),
+    linear-gradient(180deg, rgba(126, 166, 250, .15) 0%, rgba(38, 62, 128, .20) 56%, rgba(10, 20, 42, .26) 100%) !important;
+  border-color: rgba(214, 232, 255, .34) !important;
+  border-top-color: rgba(248, 252, 255, .56) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .46),
+    inset 0 -1px 0 rgba(255, 255, 255, .06),
+    inset 0 -16px 26px -20px rgba(0, 0, 0, .50),
+    inset 0 16px 28px -18px rgba(196, 222, 255, .50),
+    0 18px 38px rgba(0, 0, 0, .48),
+    0 2px 8px rgba(0, 0, 0, .36),
+    0 0 44px rgba(126, 168, 255, .26) !important;
+  transform: translateY(-1px);
+}
+html[data-fairy-skin] :is(.wtg9ga_newSession, ._2H3hWW_newSession):active {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .18),
+    0 6px 16px rgba(0, 0, 0, .40) !important;
+}
+html[data-fairy-skin] :is(.wtg9ga_newSession, ._2H3hWW_newSession):focus-visible {
+  outline: 2px solid rgba(150, 186, 255, .55);
+  outline-offset: 3px;
+}
+
+/* The four panel entries are one glass slab: the list itself is the pane and
+   the rows inside stay clear, with hairlines between them and a soft hover. */
+html[data-fairy-skin] :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
+  position: relative;
+  padding: 4px !important;
+  border-radius: 14px !important;
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, .04) 16%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(146deg, rgba(168, 198, 255, .13) 0%, rgba(96, 134, 226, .04) 32%, rgba(255, 255, 255, 0) 56%),
+    linear-gradient(180deg, rgba(88, 128, 224, .12) 0%, rgba(22, 40, 90, .16) 54%, rgba(6, 12, 28, .22) 100%) !important;
+  backdrop-filter: blur(22px) saturate(175%) brightness(1.05);
+  -webkit-backdrop-filter: blur(22px) saturate(175%) brightness(1.05);
+  border: 1px solid rgba(196, 220, 255, .13) !important;
+  border-top-color: rgba(234, 246, 255, .28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .22),
+    inset 0 -16px 26px -22px rgba(0, 0, 0, .50),
+    inset 0 14px 26px -20px rgba(170, 204, 255, .22),
+    0 12px 28px rgba(0, 0, 0, .30),
+    0 0 26px rgba(96, 140, 255, .11) !important;
+  overflow: hidden;
+}
+html[data-fairy-skin] :is(.wtg9ga_panelRow, ._2H3hWW_panelRow) {
+  position: relative;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+/* Hairline between every slot in the panel list — the "更多" entry ships inside
+   its own anchor wrapper, so sibling-of-row selectors miss it. */
+html[data-fairy-skin] :is(.wtg9ga_panelList, ._2H3hWW_panelList) > :not(:first-child) {
+  position: relative;
+}
+/* "更多" can also arrive wrapped in its own anchor, outside the list slot; the
+   same hairline is drawn there so the run of four reads continuous. */
+html[data-fairy-skin] :is(.wtg9ga_moreAnchor, ._2H3hWW_moreAnchor) {
+  position: relative;
+}
+html[data-fairy-skin] :is(.wtg9ga_moreAnchor, ._2H3hWW_moreAnchor)::before {
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(200, 222, 255, 0), rgba(200, 222, 255, .14) 18%, rgba(200, 222, 255, .14) 82%, rgba(200, 222, 255, 0));
+  pointer-events: none;
+}
+html[data-fairy-skin] :is(.wtg9ga_panelList, ._2H3hWW_panelList) > :not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(200, 222, 255, 0), rgba(200, 222, 255, .14) 18%, rgba(200, 222, 255, .14) 82%, rgba(200, 222, 255, 0));
+  pointer-events: none;
+}
+html[data-fairy-skin] :is(.wtg9ga_panelRow, ._2H3hWW_panelRow):hover {
+  background:
+    linear-gradient(180deg, rgba(176, 206, 255, .16) 0%, rgba(104, 144, 234, .06) 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12) !important;
+  transform: none !important;
+}
+html[data-fairy-skin] :is(.wtg9ga_panelRow, ._2H3hWW_panelRow):active {
+  background: rgba(90, 128, 220, .14) !important;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .28) !important;
+}
+
+html[data-fairy-skin] :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, .04) 13%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(146deg, rgba(168, 198, 255, .14) 0%, rgba(96, 134, 226, .05) 30%, rgba(255, 255, 255, 0) 56%),
+    linear-gradient(180deg, rgba(86, 126, 222, .09) 0%, rgba(22, 40, 90, .14) 52%, rgba(6, 12, 28, .19) 100%) !important;
+  backdrop-filter: blur(26px) saturate(175%) brightness(1.05);
+  -webkit-backdrop-filter: blur(26px) saturate(175%) brightness(1.05);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .26),
+    inset 0 -18px 32px -26px rgba(0, 0, 0, .55),
+    inset 0 16px 30px -22px rgba(170, 204, 255, .30),
+    0 16px 38px rgba(0, 0, 0, .40),
+    0 0 32px rgba(96, 140, 255, .12) !important;
+}
+/* Hairline: brighter along the top edge, fading down the sides. */
+html[data-fairy-skin] :is(.GAkraW_listArea, ._9lTDKa_listArea)::after {
+  border: 1px solid rgba(196, 220, 255, .16) !important;
+  border-top-color: rgba(240, 248, 255, .34) !important;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 26px rgba(130, 170, 255, .07),
+    0 0 22px rgba(96, 140, 255, .07);
+}
+/* Inner surfaces stay clear so the frosted backdrop is what shows. */
+html[data-fairy-skin] :is(.GAkraW_list, .GAkraW_treeBody, .GAkraW_flatList, ._9lTDKa_list) {
+  background: transparent !important;
+}
+html[data-fairy-skin] :is(.GAkraW_root, ._9lTDKa_root) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+html[data-fairy-skin] :is(.wnFoaW_sessionRow, ._9lTDKa_sessionRow) {
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+html[data-fairy-skin] :is(.wnFoaW_sessionRow, ._9lTDKa_sessionRow):hover {
+  background:
+    linear-gradient(180deg, rgba(176, 206, 255, .16) 0%, rgba(104, 144, 234, .06) 100%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+/* =====================================================================
+   Gray-white rail. Only the column's own surface and its unboxed chrome go
+   light; every glass card keeps the console's original dark treatment, so the
+   frosted look is unchanged — the rail just sits on a pale ground.
+   ===================================================================== */
+html[data-fairy-skin] .BynINW_sidebarCol {
+  --dsw-specific-sidebar-fill: #444952;
+  --dsw-alias-bg-layer-1: #4b5058;
+  --dsw-alias-bg-layer-2: #3f444c;
+  --dsw-alias-bg-layer-3: #3b4048;
+  --dsw-alias-label-primary: #eaf0f8;
+  --dsw-alias-label-secondary: #c3ccd9;
+  --dsw-alias-label-tertiary: #a6b0be;
+  --dsw-alias-interactive-bg-hover: rgba(255, 255, 255, .08);
+  --dsw-alias-border-l2: rgba(255, 255, 255, .14);
+  --dsw-alias-border-l3: rgba(255, 255, 255, .10);
+  background: linear-gradient(180deg, #4b5058 0%, #3b4048 100%) !important;
+  border-right-color: rgba(0, 0, 0, .55) !important;
+  color: #1a2438;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(._2H3hWW_brandName, .wtg9ga_brandName)::before {
+  color: #f2f7ff !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(._2H3hWW_brandName, .wtg9ga_brandName)::after {
+  color: rgba(226, 236, 250, .55) !important;
+}
+/* A translucent fill would bleach against the pale rail, so the cards carry the
+   same gradient stack with a near-opaque navy body: the frosted look survives,
+   the rail behind it does not wash the glass out. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .26) 0%, rgba(255, 255, 255, .06) 15%, rgba(255, 255, 255, 0) 36%),
+    linear-gradient(104deg, rgba(255, 255, 255, 0) 16%, rgba(226, 238, 255, .14) 24%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(160deg, rgba(34, 56, 110, .92) 0%, rgba(14, 26, 56, .93) 52%, rgba(6, 12, 26, .94) 100%) !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, .09) 16%, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(104deg, rgba(255, 255, 255, 0) 14%, rgba(238, 246, 255, .20) 24%, rgba(255, 255, 255, 0) 36%),
+    linear-gradient(160deg, rgba(46, 72, 134, .93) 0%, rgba(18, 32, 66, .94) 52%, rgba(8, 15, 32, .95) 100%) !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .03) 16%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(146deg, rgba(168, 198, 255, .10) 0%, rgba(96, 134, 226, .03) 32%, rgba(255, 255, 255, 0) 56%),
+    linear-gradient(180deg, rgba(30, 50, 100, .90) 0%, rgba(12, 22, 48, .92) 54%, rgba(5, 10, 24, .93) 100%) !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .13) 0%, rgba(255, 255, 255, .03) 13%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(150deg, rgba(152, 184, 255, .08) 0%, rgba(92, 130, 222, .03) 30%, rgba(255, 255, 255, 0) 54%),
+    linear-gradient(180deg, rgba(28, 48, 96, .88) 0%, rgba(11, 20, 44, .91) 52%, rgba(5, 10, 24, .92) 100%) !important;
+}
+/* The list's scroll fade paints var(--dsw-specific-sidebar-fill), which is now
+   pale — over the dark glass it drew a light band at the bottom. Fade it into
+   the glass tone instead. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_fade, ._9lTDKa_fade) {
+  display: none !important;
+}
+/* Against the pale rail the pane's bottom rim would read as a white shelf;
+   keep the light rim on top only and let the base fall away dark. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea)::after {
+  border: 1px solid rgba(150, 180, 235, .14) !important;
+  border-top-color: rgba(240, 248, 255, .30) !important;
+  box-shadow: none !important;
+}
+/* The console's deep inner bottom shadow reads as a black band on a pale rail.
+   Replace the three card shadows with a single soft drop. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .34),
+    inset 0 -1px 0 rgba(255, 255, 255, .05),
+    0 10px 22px rgba(0, 0, 0, .20) !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .22),
+    0 8px 18px rgba(0, 0, 0, .18) !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+  /* No drop shadow under the pane: the rail below stays clean. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .20) !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .42),
+    inset 0 -1px 0 rgba(255, 255, 255, .06),
+    0 14px 28px rgba(0, 0, 0, .22) !important;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession):active {
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, .28),
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    0 6px 14px rgba(0, 0, 0, .18) !important;
+}
+/* The dark glass cards re-declare the console's ink for their own subtree. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession),
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList),
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+  --dsw-alias-label-primary: #e8f0ff;
+  --dsw-alias-label-secondary: #b6c8e8;
+  --dsw-alias-label-tertiary: #8ea4c6;
+  --dsw-alias-interactive-bg-hover: rgba(130, 168, 255, .12);
+  --dsw-alias-border-l2: rgba(130, 168, 255, .20);
+  --dsw-alias-border-l3: rgba(130, 168, 255, .14);
+  color: #e8f0ff;
+}
+
+/*
+ * One rail, one edge. The app ships the three glass cards with slightly
+ * different horizontal margins, so their borders stepped in and out down the
+ * rail. A single inset pins all three to the same left and right edge, and the
+ * cards are told to take the full remaining width instead of their own.
+ * Tune --fairy-rail-inset: 6px reads tighter, 14px roomier.
+ */
+html[data-fairy-skin] .BynINW_sidebarCol {
+  --fairy-rail-inset: 10px;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession),
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList),
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+  margin-left: var(--fairy-rail-inset) !important;
+  margin-right: var(--fairy-rail-inset) !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+}
+/* The new-session card is a call to action, so its label rides in the middle;
+   the panel and session panes keep their rows flush left. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* =====================================================================
+   Liquid light inside the rail glass. Every card carries one slow, blurred
+   field *inside* itself — above its tint, below its content — and only
+   transform animates, so the 900 px pane rasters once and the compositor
+   moves it: no repaint, and no per-frame re-blur of the backdrop. That last
+   part matters: animating the rail *behind* the cards would re-run every
+   card's 22–28 px backdrop filter on each frame and stall the drag.
+
+   z-index: -1 with isolation keeps the field under the text inside the
+   card's own stacking context; overflow: hidden clips it to the rounded
+   corners. Tune the read with opacity (density), filter blur (softness) and
+   animation-duration (speed) — the four surfaces run out of phase on purpose.
+   ===================================================================== */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession),
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList),
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea),
+html[data-fairy-skin] .fs-rail-stats {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate;
+}
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession)::before,
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList)::before,
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea)::before,
+html[data-fairy-skin] .fs-rail-stats::before {
+  content: "";
+  position: absolute;
+  /* Oversized so the drift has room to travel before an edge shows. */
+  inset: -42%;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 46% at 32% 26%, rgba(132, 176, 255, .60), rgba(132, 176, 255, 0) 72%),
+    radial-gradient(54% 42% at 70% 60%, rgba(96, 214, 238, .40), rgba(96, 214, 238, 0) 74%),
+    radial-gradient(62% 48% at 44% 84%, rgba(166, 148, 255, .32), rgba(166, 148, 255, 0) 72%),
+    linear-gradient(104deg, rgba(255, 255, 255, 0) 41%, rgba(214, 236, 255, .14) 47%, rgba(255, 255, 255, 0) 54%);
+  filter: blur(24px) saturate(130%);
+  mix-blend-mode: screen;
+  opacity: .5;
+  will-change: transform;
+  animation: fs-liquid-drift 26s ease-in-out infinite alternate;
+}
+/* Call to action: the smallest surface, so it runs brightest and quickest. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession)::before {
+  opacity: .62;
+  filter: blur(20px) saturate(135%);
+  animation-duration: 24s;
+  animation-delay: -5s;
+}
+/* Panel card: mid-size, a touch calmer. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList)::before {
+  opacity: .46;
+  filter: blur(28px) saturate(125%);
+  animation-duration: 30s;
+  animation-delay: -13s;
+}
+/* Session pane: the long one. Slowest drift keeps a tall sheet from looking
+   like a rolling wallpaper. */
+html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea)::before {
+  opacity: .40;
+  filter: blur(34px) saturate(120%);
+  animation-duration: 38s;
+  animation-delay: -21s;
+}
+html[data-fairy-skin] .fs-rail-stats::before {
+  opacity: .50;
+  filter: blur(22px) saturate(130%);
+  animation-duration: 32s;
+  animation-delay: -9s;
+}
+
+/*
+ * Resize paint shield. The glass is expensive by design: every card runs a
+ * 22-28px backdrop blur, a saturate/brightness pass and a multi-layer shadow.
+ * Those are fine on a static frame and ruinous at 60fps while a rail is being
+ * dragged, because the whole conversation relayouts underneath them each frame.
+ * While html[data-fairy-resizing] is set the glass goes flat: no blur, no
+ * shadow, no transition, and the core's drop-shadow is dropped too. Everything
+ * comes back on pointerup.
+ */
+html[data-fairy-skin][data-fairy-resizing] :is(
+  .wtg9ga_newSession, ._2H3hWW_newSession,
+  .wtg9ga_panelList, ._2H3hWW_panelList,
+  .GAkraW_listArea, ._9lTDKa_listArea,
+  .wtg9ga_panelRow, ._2H3hWW_panelRow
+) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition: none !important;
+}
+/* The liquid field is a compositor layer, but a drag relayouts the whole rail
+   every frame — park it for the duration instead of feeding it new geometry. */
+html[data-fairy-skin][data-fairy-resizing] :is(
+  .wtg9ga_newSession, ._2H3hWW_newSession,
+  .wtg9ga_panelList, ._2H3hWW_panelList,
+  .GAkraW_listArea, ._9lTDKa_listArea,
+  .fs-rail-stats
+)::before {
+  animation: none !important;
+}
+html[data-fairy-skin][data-fairy-resizing] :is(.fs-hero-orb, .fs-chat-orb, .fs-header-orb) {
+  filter: none !important;
+}
+html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
+  transition: none !important;
+}
+
+/* ---- rail stats: balance + this conversation's tokens ---- */
+.fs-rail-stats {
+  margin: 8px 2px 2px;
+  padding: 8px 10px 9px;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 220, 255, .13);
+  border-top-color: rgba(234, 246, 255, .26);
+  background:
+    var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .03) 16%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(180deg, rgba(30, 50, 100, .90) 0%, rgba(12, 22, 48, .92) 54%, rgba(5, 10, 24, .93) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 18px rgba(0, 0, 0, .18);
+  color: #e8f0ff;
+  font-size: 12px;
+  line-height: 1.5;
+  flex: none;
+}
+.fs-rs-head {
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: #8ea4c6;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.fs-rs-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fs-rs-row span { color: #b6c8e8; }
+.fs-rs-row b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #f2f7ff;
+}
+.fs-rs-raw {
+  margin-top: 4px;
+  font: 9px/1.35 Consolas, monospace;
+  color: #7f96bb;
+  word-break: break-all;
 }
 `
 
@@ -1412,17 +2079,37 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
       /*
        * The film ends straight into the console: the intro choreography
        * (backdrop, greeting card, docking orb) is gone, so this only fades the
-       * video out and unmounts it. The fade is deliberately short — 280ms in
-       * CSS — so the black overlay does not linger over the ready console.
+       * video out and unmounts it. The fade is short (BOOT_FADE_MS) and starts
+       * while the picture is still dimming, so the console is already painted
+       * when the film goes black — no dead frame in between.
+       *
+       * The cut now lands while the soundtrack is still running, so the volume
+       * ramps down across the same window instead of stopping on a click.
        */
+      const fadeSound = () => {
+        const media = videoRef.current
+        if (!media || media.muted) return
+        const from = media.volume
+        if (!(from > 0)) return
+        const begin = performance.now()
+        const step = () => {
+          if (!videoRef.current) return
+          const progress = Math.min(1, (performance.now() - begin) / BOOT_FADE_MS)
+          media.volume = Math.max(0, from * (1 - progress))
+          if (progress < 1) window.requestAnimationFrame(step)
+        }
+        window.requestAnimationFrame(step)
+      }
+
       const finishBoot = React.useCallback(() => {
         if (started.current) return
         started.current = true
+        fadeSound()
         setVideoLeaving(true)
         later(() => {
           setVideoMounted(false)
           setPhase('done')
-        }, 300)
+        }, BOOT_FADE_MS + 20)
       }, [later])
 
       React.useEffect(() => () => {
@@ -1480,6 +2167,36 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
         video.addEventListener('ended', onEnded)
         video.addEventListener('error', onError)
 
+        /*
+         * Hand over before the black hold instead of waiting for `ended`.
+         * requestVideoFrameCallback is frame-accurate; `timeupdate` (~4 Hz) is
+         * the fallback, and `ended`/the watchdog stay as the last resort if the
+         * metadata never arrives.
+         */
+        let frameCallback = 0
+        const nearEnd = () => {
+          const duration = video.duration
+          if (!Number.isFinite(duration) || duration <= 0) return false
+          return duration - video.currentTime <= BOOT_HANDOFF_SECONDS
+        }
+        const onTimeUpdate = () => {
+          if (nearEnd()) finishBoot()
+        }
+        const onFrame = () => {
+          frameCallback = 0
+          if (nearEnd()) {
+            finishBoot()
+            return
+          }
+          if (!disposed && typeof video.requestVideoFrameCallback === 'function') {
+            frameCallback = video.requestVideoFrameCallback(onFrame)
+          }
+        }
+        video.addEventListener('timeupdate', onTimeUpdate)
+        if (typeof video.requestVideoFrameCallback === 'function') {
+          frameCallback = video.requestVideoFrameCallback(onFrame)
+        }
+
         const play = async () => {
           video.volume = 0.9
           try {
@@ -1504,8 +2221,12 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
           disposed = true
           window.clearTimeout(controlsTimer)
           window.clearTimeout(watchdog)
+          if (frameCallback && typeof video.cancelVideoFrameCallback === 'function') {
+            video.cancelVideoFrameCallback(frameCallback)
+          }
           video.removeEventListener('ended', onEnded)
           video.removeEventListener('error', onError)
+          video.removeEventListener('timeupdate', onTimeUpdate)
           video.pause()
         }
       }, [videoMounted, finishBoot, replayToken])
@@ -1661,6 +2382,258 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
             if (!hadDark) body.removeAttribute('data-ds-dark-theme')
           }
         }, 'fairy-splash: dark H.D.D. skin')
+
+        effect(() => {
+          /* Mounted lazily: a cold app start can run this effect before the
+             sidebar or its workspace region exists, so the card is created on
+             the first tick that finds both, and re-created if the shell
+             throws the injected node away. */
+          let card = null
+          let balanceNode = null
+          let tokenNode = null
+          let alignTimer = 0
+          let balanceTimer = 0
+          let energyTimer = 0
+          const parseTokens = () => {
+            const composer = document.querySelector('[class*="GRgSLq_root"]')
+              || document.querySelector('[class*="RlGAzG_root"]')
+            if (composer === null) return null
+            const match = (composer.textContent || '').match(/(\d[\d.,]*)\s*([KkMmBb])?\s*tok(?!\s*\/)/)
+            if (match === null) return null
+            const value = Number(match[1].replace(/,/g, ''))
+            if (!Number.isFinite(value)) return null
+            const scale = { k: 1e3, m: 1e6, b: 1e9 }[(match[2] || '').toLowerCase()] || 1
+            return value * scale
+          }
+          // One unit only, as asked: millions of tokens.
+          const formatTokens = (value) => {
+            const millions = value / 1e6
+            const text = Number.isFinite(millions) ? String(Number(millions.toFixed(1))) : '0'
+            return text + ' M tok'
+          }
+          /* Today's energy: each session's total is compared with the last
+             total seen for that session, and only the increase is banked, so
+             switching sessions never double counts. Only the day's total
+             resets at local midnight; the baselines survive it, so a session
+             left open overnight is not counted twice. */
+          /* Today's energy. The dock's token figure is the session's running
+             total, and it can dip and climb again, so deltas are unusable:
+             we keep the highest value seen per session and subtract the value
+             the session had when the day started. Only that baseline resets
+             at local midnight, so a session left open overnight is not
+             counted twice. */
+          const ENERGY_KEY = 'fairy-splash:energy:v3'
+          const todayKey = () => {
+            const now = new Date()
+            return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
+          }
+          const loadEnergy = () => {
+            try {
+              const parsed = JSON.parse(window.localStorage.getItem(ENERGY_KEY) || 'null')
+              if (parsed && parsed.seen && typeof parsed.seen === 'object' && parsed.base && typeof parsed.base === 'object') return parsed
+            }
+            catch (error) { /* storage unavailable */ }
+            return { date: todayKey(), seen: {}, base: {} }
+          }
+          const saveEnergy = (state) => {
+            try { window.localStorage.setItem(ENERGY_KEY, JSON.stringify(state)) } catch (error) { /* ignore */ }
+          }
+          const sessionKey = () => {
+            const row = document.querySelector('[class*="sessionRow"][aria-current="true"]')
+              || document.querySelector('[class*="sessionRow"][data-active="true"]')
+            const text = row === null ? '' : (row.textContent || '').trim().slice(0, 60)
+            return text || 'session'
+          }
+          let energy = loadEnergy()
+          const todayTotal = () => {
+            let sum = 0
+            for (const key of Object.keys(energy.seen)) {
+              const base = energy.base[key]
+              if (typeof base === 'number') sum += Math.max(0, energy.seen[key] - base)
+            }
+            return sum
+          }
+          /* Whatever conversation is open, its own running total is what the
+             composer dock reports; show that number directly, one unit. */
+          const accumulate = () => {
+            if (tokenNode === null) return
+            const value = parseTokens()
+            const text = value === null ? '—' : formatTokens(value)
+            // 10 Hz polling: only touch the DOM when the readout changes.
+            if (tokenNode.textContent !== text) tokenNode.textContent = text
+          }
+          const resolveRemote = () => {
+            const getter = typeof ctx.get === 'function' ? ctx.get : null
+            if (getter !== null) {
+              try {
+                const hub = getter.call(ctx, 'remote')
+                if (hub) return hub
+              }
+              catch (error) { /* not registered for this context */ }
+            }
+            try {
+              if (ctx.remote) return ctx.remote
+            }
+            catch (error) { /* service guard */ }
+            const global = typeof window !== 'undefined' ? window : undefined
+            const bridge = global && global.__DSH__ ? global.__DSH__ : undefined
+            if (bridge && bridge.remote) return bridge.remote
+            return undefined
+          }
+          const pick = (obj, key) => {
+            if (!obj) return undefined
+            if (typeof obj.get === 'function') {
+              try {
+                const value = obj.get(key)
+                if (value) return value
+              }
+              catch (error) { /* not registered */ }
+            }
+            const spaces = obj.namespaces
+            if (spaces) {
+              try {
+                const value = typeof spaces.get === 'function' ? spaces.get(key) : spaces[key]
+                if (value) return value
+              }
+              catch (error) { /* guarded */ }
+            }
+            try { return obj[key] } catch (error) { return undefined }
+          }
+          const readBalance = async () => {
+            if (balanceNode === null) return
+            try {
+              const hub = resolveRemote()
+              const entry = pick(hub, 'account')
+              const remote = entry && entry.service ? entry.service : entry
+              if (!remote || typeof remote.getBalance !== 'function') {
+                balanceNode.textContent = '不可用'
+                return
+              }
+              const active = locale && locale.getSnapshot ? locale.getSnapshot().active : 'zh-CN'
+              const meta = {
+                version: '0.2.1-rc.3',
+                locale: active,
+                timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
+              }
+              const result = await remote.getBalance(meta)
+              const outcome = result && result.ok ? result.value : null
+              if (!outcome || outcome.status !== 'ready') return
+              const all = [].concat(
+                Array.isArray(outcome.value) ? outcome.value : [],
+                Array.isArray(outcome.bonusWallets) ? outcome.bonusWallets : [],
+              ).filter((entry) => entry && typeof entry.balance === 'string')
+              if (all.length === 0) return
+              const preferred = all.find((entry) => entry.currency === 'CNY') || all[0]
+              const sameCurrency = all.filter((entry) => entry.currency === preferred.currency)
+              const total = sameCurrency.reduce((sum, entry) => sum + (Number(entry.balance) || 0), 0)
+              const sign = preferred.currency === 'CNY' ? '\u00a5' : '$'
+              const parts = Math.abs(total).toFixed(2).split('.')
+              const grouped = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+              balanceNode.textContent = (total < 0 ? '-' : '') + sign + grouped + '.' + parts[1]
+            }
+            catch (error) {
+              if (balanceNode !== null && balanceNode.textContent === '—') balanceNode.textContent = '—'
+            }
+          }
+          /* Today's energy across every conversation. The Host exposes each
+             session's cumulative TokenUsage through session/projections; we sum
+             the sessions that were active since local midnight and fall back to
+             the local counter when that call is unavailable. */
+          let energyFromHost = false
+          const readHostEnergy = async () => {
+            try {
+              const hub = resolveRemote()
+              const entry = pick(hub, 'session')
+              const sessionService = entry && entry.service ? entry.service : entry
+              if (!sessionService || typeof sessionService.list !== 'function') return
+              const listed = await sessionService.list({})
+              const items = listed && Array.isArray(listed.items) ? listed.items : []
+              if (items.length === 0) return
+              const midnight = new Date()
+              midnight.setHours(0, 0, 0, 0)
+              const since = midnight.getTime()
+              let total = 0
+              let counted = 0
+              for (const item of items) {
+                if (!item || typeof item.sessionId !== 'string') continue
+                if (typeof item.updatedAt === 'number' && item.updatedAt < since) continue
+                try {
+                  const projection = await sessionService.projections({ sessionId: item.sessionId })
+                  const values = projection && projection.values ? projection.values : projection
+                  const usage = values && values.usage ? values.usage : null
+                  if (!usage) continue
+                  const sum = typeof usage.totalTokens === 'number'
+                    ? usage.totalTokens
+                    : (Number(usage.inputTokens) || 0) + (Number(usage.outputTokens) || 0)
+                  if (Number.isFinite(sum) && sum > 0) { total += sum; counted += 1 }
+                }
+                catch (error) { /* one session unreadable, keep the rest */ }
+              }
+              if (counted === 0) return
+              energyFromHost = true
+              if (tokenNode !== null) tokenNode.textContent = formatTokens(total)
+            }
+            catch (error) { /* fall back to the local counter */ }
+          }
+          const alignCard = () => {
+            if (card === null || !card.isConnected) return
+            const button = document.querySelector('[class*="newSession"]')
+            const parent = card.parentElement
+            if (button === null || parent === null) return
+            const target = button.getBoundingClientRect()
+            const parentRect = parent.getBoundingClientRect()
+            if (target.width < 80) return
+            const style = getComputedStyle(parent)
+            const padLeft = Number.parseFloat(style.paddingLeft) || 0
+            const padRight = Number.parseFloat(style.paddingRight) || 0
+            card.style.marginLeft = Math.max(0, Math.round(target.left - parentRect.left - padLeft)) + 'px'
+            card.style.marginRight = Math.max(0, Math.round(parentRect.right - target.right - padRight)) + 'px'
+          }
+          const mount = () => {
+            if (card !== null && card.isConnected) return true
+            const column = document.querySelector('[class*="sidebarCol"]')
+            if (column === null) return false
+            const anchor = column.querySelector('[class*="regionArea"]')
+            if (anchor === null) return false
+            for (const stale of document.querySelectorAll('.fs-rail-stats')) stale.remove()
+            card = document.createElement('div')
+            card.className = 'fs-rail-stats'
+            card.innerHTML = '<div class="fs-rs-head">H.D.D. 账户</div>'
+              + '<div class="fs-rs-row"><span>余额</span><b data-fs-balance>—</b></div>'
+              + '<div class="fs-rs-row"><span>本对话算力</span><b data-fs-tokens>—</b></div>'
+            if (anchor.parentElement !== null) anchor.insertAdjacentElement('afterend', card)
+            else column.appendChild(card)
+            balanceNode = card.querySelector('[data-fs-balance]')
+            tokenNode = card.querySelector('[data-fs-tokens]')
+            alignCard()
+            window.addEventListener('resize', alignCard)
+            window.clearInterval(alignTimer)
+            alignTimer = window.setInterval(alignCard, 1200)
+            window.clearInterval(balanceTimer)
+            balanceTimer = window.setInterval(() => { void readBalance() }, 30000)
+            void readBalance()
+            return true
+          }
+          const tick = () => {
+            if (!mount()) return
+            const copies = document.querySelectorAll('.fs-rail-stats')
+            for (let index = 1; index < copies.length; index += 1) copies[index].remove()
+            accumulate()
+          }
+          tick()
+          const timer = window.setInterval(tick, 100)
+          return () => {
+            window.clearInterval(timer)
+            window.clearInterval(alignTimer)
+            window.clearInterval(balanceTimer)
+            window.clearInterval(energyTimer)
+            window.removeEventListener('resize', alignCard)
+            if (card !== null) card.remove()
+            card = null
+            balanceNode = null
+            tokenNode = null
+          }
+        }, 'fairy-splash: rail stats')
 
         effect(() => {
           // One crisp SVG in the shell's brand cell; only its gear and iris

@@ -6,7 +6,7 @@
 
 | 模块 | npm 包 | 作用 |
 | --- | --- | --- |
-| 界面皮肤 | `dsh-fairy-splash` | H.D.D. 开机动画、新会话界面核心与标题、侧边栏徽标、对话区核心与溶解带 |
+| 界面皮肤 | `dsh-fairy-splash` | H.D.D. 开机动画、标题条字标、玻璃侧边栏与 rail、对话区背景图与核心 |
 | 语音 | `dsh-fairy-voice` | 回复播放按钮、自动朗读、GPT-SoVITS 桥接、首次启动自举运行时 |
 | 元包 | `dsh-fairy-pack` | 只做登记：把上面两个一起挂进插件树 |
 | 人格 | `persona/Fairy.md` | 写入 `~/.dsh/AGENT.md` |
@@ -28,6 +28,18 @@ dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 ```
 
 只装一个就是元包，两个内核跟依赖一起进来。人格仍需手动：把 `persona/Fairy.md` 复制到 `~/.dsh/AGENT.md`。
+
+## 更新记录
+
+### 1.0.2
+
+- 标题条：实心条 + 渐变字标（软描边与 10px 挤出），避开 Windows 原生命名区。
+- 侧边栏：四个面板入口合并成一块玻璃板，rail 与侧栏分层，暗色与浅色两套都跟着走。
+- 对话区：背景图 `assets/chat-bg.jpg` 铺满，压暗渐变保正文对比度；关闭旧溶解带，图片上下贯通。
+- 滚动条：透明轨 + 悬浮胶囊滑块，只有会话列表预留 gutter，滚动条出现不再把正文挤偏。
+- 拖拽：拖分隔条期间挂 `html[data-fairy-resizing]`，暂关模糊、阴影与过渡，避免玻璃叠三层 backdrop blur 卡成幻灯片。
+- 字体：Latin 走 Segoe UI，CJK 走随 Windows 分发的 Noto Sans SC 可变字面。
+- 开屏：在影片最后一帧仍是活画时交接，不再等 `ended` 后的约 1.9 秒黑场。
 
 ## 发布（维护者）
 

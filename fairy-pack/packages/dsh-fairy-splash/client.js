@@ -2592,12 +2592,27 @@ html[data-fairy-skin] .fs-rail-stats::before {
         effect(() => {
           let raf = 0
           let last = null
+          /*
+           * Anything that lives in the composer and grows upward — the "+" menu,
+           * an approval card, an ask-me card, a tall draft — is clipped by the
+           * same scroller. Measure the composer stack itself: once it is taller
+           * than a settled composer, whatever is inside it must be allowed to
+           * paint past the frame. A menu elsewhere on the page also counts.
+           */
+          const visibleTall = (selector, minW, minH) => {
+            for (const node of document.querySelectorAll(selector)) {
+              const box = node.getBoundingClientRect()
+              if (box.height > minH && box.width > minW) return true
+            }
+            return false
+          }
           const sync = () => {
             raf = 0
-            let open = false
-            for (const node of document.querySelectorAll('[class*="_menu"]')) {
-              const box = node.getBoundingClientRect()
-              if (box.height > 60 && box.width > 180) { open = true; break }
+            let open = visibleTall('[class*="_menu"]', 180, 60)
+            if (!open) open = visibleTall('[class*="_approval"], [class*="_question"], [class*="_planReview"]', 160, 80)
+            if (!open) {
+              const stack = document.querySelector('[class*="_composerStack"]')
+              if (stack !== null) open = stack.getBoundingClientRect().height > 210
             }
             if (open === last) return
             last = open

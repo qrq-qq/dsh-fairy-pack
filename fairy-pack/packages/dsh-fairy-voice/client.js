@@ -46,6 +46,52 @@ window.__ModuleLoader__.load({
       }
     }
 
+    const STORAGE_VOLUME = 'dsh.fairyVoice.volume.v1'
+
+    function readVolume() {
+      try {
+        const raw = Number(window.localStorage.getItem(STORAGE_VOLUME))
+        if (!Number.isFinite(raw)) return 1
+        return Math.min(1, Math.max(0, raw))
+      }
+      catch (error) {
+        return 1
+      }
+    }
+
+    function writeVolume(value) {
+      try {
+        window.localStorage.setItem(STORAGE_VOLUME, String(value))
+      }
+      catch (error) {
+        /* storage may be unavailable */
+      }
+    }
+
+    let volume = readVolume()
+
+    const STORAGE_ON = 'dsh.fairyVoice.enabled.v1'
+
+    function readVoiceOn() {
+      try {
+        return window.localStorage.getItem(STORAGE_ON) !== '0'
+      }
+      catch (error) {
+        return true
+      }
+    }
+
+    function writeVoiceOn(value) {
+      try {
+        window.localStorage.setItem(STORAGE_ON, value ? '1' : '0')
+      }
+      catch (error) {
+        /* storage may be unavailable */
+      }
+    }
+
+    let voiceEnabled = readVoiceOn()
+
     let statusCache = { at: 0, value: { ready: false, starting: false } }
 
     async function readStatus(force) {
@@ -132,24 +178,51 @@ window.__ModuleLoader__.load({
       }
     }
 
+    const isReplyNode = (node) => {
+      if (node === null) return false
+      const kind = node.getAttribute('data-chat-flow-kind')
+      const part = node.getAttribute('data-chat-group-part')
+      return kind === 'assistant-step' || part === 'response' || part === 'assistant'
+    }
+
+    /*
+     * The action row is mounted inside the assistant message in rc.3, so the
+     * old sibling walk started one element too late and always came back empty
+     * — the play button then did nothing. Read the node that owns the button
+     * first, then walk back, then fall back to document order.
+     */
     function speechTextFrom(anchor) {
       if (!anchor) return ''
+      const owner = anchor.closest('[data-chat-flow-kind], [data-chat-group-part]')
+      if (isReplyNode(owner)) {
+        const own = cleanNodeText(owner)
+        if (own.length > 0) return own
+      }
+
       const tail = anchor.closest('[data-turn-tail]')
-      const wrapper = tail !== null ? tail.parentElement : anchor.closest('[data-chat-flow-kind]')
-      if (!wrapper) return ''
-      let node = wrapper.previousElementSibling
+      const wrapper = tail !== null ? tail.parentElement : owner
+      let node = wrapper === null ? null : wrapper.previousElementSibling
       let guard = 0
       while (node !== null && guard < 400) {
         guard += 1
         const kind = node.getAttribute('data-chat-flow-kind')
         const part = node.getAttribute('data-chat-group-part')
         if (kind === 'user' || kind === 'user-message' || part === 'user') break
-        if (kind === 'assistant-step' || part === 'response') {
+        if (isReplyNode(node)) {
           const text = cleanNodeText(node)
           if (text.length > 0) return text
         }
         node = node.previousElementSibling
       }
+
+      const steps = Array.from(document.querySelectorAll('[data-chat-flow-kind="assistant-step"]'))
+      const before = steps.filter((step) => step.compareDocumentPosition(anchor) & Node.DOCUMENT_POSITION_FOLLOWING)
+      const pick = before.length > 0 ? before[before.length - 1] : steps[steps.length - 1]
+      if (pick !== undefined) {
+        const text = cleanNodeText(pick)
+        if (text.length > 0) return text
+      }
+      console.warn('[fairy-voice] no reply text found for the action row')
       return ''
     }
 
@@ -211,6 +284,7 @@ window.__ModuleLoader__.load({
       return new Promise((resolve) => {
         const url = URL.createObjectURL(blob)
         const audio = new Audio(url)
+        audio.volume = volume
         token.audio = audio
         let done = false
         const finish = () => {
@@ -227,6 +301,7 @@ window.__ModuleLoader__.load({
     }
 
     async function speak(text, notify) {
+      if (!voiceEnabled) return
       stopSpeaking()
       const chunks = sentenceChunks(text)
       if (chunks.length === 0) return
@@ -487,6 +562,305 @@ window.__ModuleLoader__.load({
       }, h(StatusDot, null), h('span', null, auto ? '语音开' : '语音关'))
     }
 
+    /*
+     * The composer rail panel: the auto-read switch and its volume live on the
+     * right edge of the grey composer band instead of inside the input capsule.
+     * Plain DOM rather than a slot, because the seat is where we want it and no
+     * slot points there; the panel re-attaches itself if the shell rebuilds the
+     * seat on a session switch.
+     */
+    function ensureRailStyle() {
+      /* Replace instead of skipping: a style element injected by an older build
+         would otherwise survive the reload and keep painting the glass. */
+      const stale = document.getElementById('fairy-voice-rail-style')
+      if (stale !== null) stale.remove()
+      const style = document.createElement('style')
+      style.id = 'fairy-voice-rail-style'
+      style.textContent = [
+        '[data-fairy-voice-rail]{position:fixed;left:0;top:0;width:124px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:stretch;gap:0;padding:4px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#31363e 0%,#282d34 54%,#22262d 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 6px 14px rgba(0,0,0,.26);color:#e6ecf5;font-size:12px;line-height:1.4;z-index:9000;pointer-events:auto}',
+        '[data-fairy-voice-rail] .fv-row{flex:1 1 0;display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;min-height:0;color:#c9d3e0}',
+        '[data-fairy-voice-rail] .fv-label{display:inline-flex;align-items:center;gap:5px;color:#c9d3e0;white-space:nowrap}',
+        '[data-fairy-voice-rail] .fv-dot{width:6px;height:6px;border-radius:50%;background:#f87171;display:inline-block;flex:0 0 auto}',
+        '[data-fairy-voice-rail] .fv-pill{min-width:38px;height:18px;padding:0 7px;border-radius:999px;border:1px solid rgba(122,162,255,.34);background:linear-gradient(180deg,rgba(57,120,237,.30),rgba(9,18,52,.50));color:#eaf2ff;font:11px/1 "Segoe UI","Noto Sans SC",sans-serif;cursor:pointer;transition:border-color 160ms ease,background 160ms ease,color 160ms ease}',
+        '[data-fairy-voice-rail] .fv-pill:hover{border-color:rgba(150,190,255,.55)}',
+        '[data-fairy-voice-rail] .fv-pill.is-off{border-color:rgba(120,140,175,.28);background:linear-gradient(180deg,rgba(40,52,78,.35),rgba(8,14,30,.45));color:#8ea4c6}',
+        '[data-fairy-voice-rail] .fv-slider{flex:1;min-width:0}',
+        '[data-fairy-voice-rail] input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;outline:none;cursor:pointer;background:linear-gradient(90deg,rgba(120,170,255,.85),rgba(58,96,200,.35))}',
+        '[data-fairy-voice-rail] input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#dbe7ff;box-shadow:0 0 6px rgba(122,168,255,.85);cursor:pointer}',
+        '[data-fairy-voice-rail] input[type=range]::-moz-range-thumb{width:11px;height:11px;border:none;border-radius:50%;background:#dbe7ff;cursor:pointer}',
+      ].join('\n')
+      document.head.appendChild(style)
+    }
+
+    function buildRailPanel() {
+      const host = document.createElement('div')
+      host.setAttribute('data-fairy-voice-rail', '')
+      /* Hidden until the first placement, otherwise it flashes at 0,0 on mount. */
+      host.style.visibility = 'hidden'
+
+      const row = (label, control, dot) => {
+        const line = document.createElement('div')
+        line.className = 'fv-row'
+        const name = document.createElement('span')
+        name.className = 'fv-label'
+        if (dot) name.appendChild(dot)
+        name.appendChild(document.createTextNode(label))
+        line.appendChild(name)
+        line.appendChild(control)
+        return line
+      }
+
+      /* Master switch: voice output as a whole. Off means nothing is spoken at
+         all, including the reply that is already streaming. */
+      const dot = document.createElement('i')
+      dot.className = 'fv-dot'
+      const master = document.createElement('button')
+      master.type = 'button'
+      master.className = 'fv-pill'
+      const masterLine = row('语音', master, dot)
+
+      master.addEventListener('click', () => {
+        voiceEnabled = !voiceEnabled
+        writeVoiceOn(voiceEnabled)
+        if (!voiceEnabled) stopSpeaking()
+        syncMaster()
+      })
+
+      /* Volume: the only continuous control, so it owns the line's remaining
+         width instead of a pill. */
+      const slider = document.createElement('input')
+      slider.type = 'range'
+      slider.className = 'fv-slider'
+      slider.min = '0'
+      slider.max = '100'
+      slider.step = '1'
+      slider.value = String(Math.round(volume * 100))
+      slider.title = '语音音量'
+      slider.setAttribute('aria-label', '语音音量')
+      const volumeLine = row('音量', slider)
+
+      /* Auto-read: whether finished replies are spoken on their own. */
+      const auto = document.createElement('button')
+      auto.type = 'button'
+      auto.className = 'fv-pill'
+      auto.setAttribute('data-fairy-voice-toggle', '')
+      const autoLine = row('自动朗读', auto)
+
+      const syncMaster = () => {
+        master.textContent = voiceEnabled ? '开' : '关'
+        master.classList.toggle('is-off', !voiceEnabled)
+        master.title = voiceEnabled ? '语音已开启，点击关闭' : '语音已关闭，点击开启'
+        master.setAttribute('aria-label', master.title)
+        host.style.opacity = voiceEnabled ? '1' : '.72'
+      }
+
+      const syncAuto = () => {
+        const on = watcher.auto
+        auto.textContent = on ? '开' : '关'
+        auto.classList.toggle('is-off', !on)
+        auto.title = on ? '自动朗读已开启，点击关闭' : '自动朗读已关闭，点击开启'
+        auto.setAttribute('aria-label', auto.title)
+      }
+
+      const syncVolume = () => {
+        slider.value = String(Math.round(volume * 100))
+        volumeLine.title = '音量 ' + Math.round(volume * 100) + '%'
+      }
+
+      const syncStatus = () => {
+        void readStatus(false).then((value) => {
+          dot.style.background = value.ready ? '#4ade80' : value.starting ? '#facc15' : '#f87171'
+        })
+      }
+
+      auto.addEventListener('click', () => {
+        const next = !watcher.auto
+        watcher.auto = next
+        writeAutoRead(next)
+        syncAuto()
+        if (!next) stopSpeaking()
+      })
+
+      slider.addEventListener('input', () => {
+        volume = Math.min(1, Math.max(0, Number(slider.value) / 100))
+        writeVolume(volume)
+        syncVolume()
+        const playing = active === null ? null : active.audio
+        if (playing !== null) playing.volume = volume
+      })
+
+      host.appendChild(masterLine)
+      host.appendChild(volumeLine)
+      host.appendChild(autoLine)
+
+      syncMaster()
+      syncAuto()
+      syncVolume()
+      syncStatus()
+      const timer = window.setInterval(syncStatus, 15000)
+
+      return {
+        host,
+        baseHeight: 0,
+        lastKey: '',
+        syncToggle: syncAuto,
+        stop() {
+          window.clearInterval(timer)
+          host.remove()
+        },
+      }
+    }
+
+    function installRailPanel() {
+      ensureRailStyle()
+      let panel = null
+      let lastAuto = null
+      /*
+       * The card claims its own room instead of trusting padding on the seat:
+       * the composer wrapper is nested, so shrinking the seat never reached the
+       * capsule. The first seat child that contains the capsule gets a right
+       * margin, and the card is then centred on the capsule itself — centred on
+       * the seat it floated above the capsule's midpoint and sat over the send
+       * button.
+       */
+      const CARD = '[class*="GRgSLq_card"], [class*="RlGAzG_card"]'
+      /*
+       * One layout for both screens: the new-conversation composer reserves the
+       * same right-hand column as a live chat, so the voice card sits in the
+       * same place and the capsule keeps the same width. Parity over per-state
+       * tidying — a composer that jumps width when the first message is sent
+       * reads as a bug.
+       */
+      const claimRoom = (seat) => {
+        const capsule = seat.querySelector(CARD)
+        if (capsule === null) return null
+        seat.setAttribute('data-fv-slot', '')
+        return capsule
+      }
+      const place = (seat, capsule) => {
+        /*
+         * Approval prompts replace the composer with their own card. The voice
+         * rail is sized from the capsule, so against that card it stretched and
+         * collided; hide it while a prompt owns the area.
+         */
+        /*
+         * A hidden approval container stays mounted in some views, so existence
+         * alone is not proof of a prompt: it has to be measurably on screen.
+         * Treating a zero-height node as "approval open" is what made the card
+         * vanish for good.
+         */
+        const approval = (seat === null ? document : seat).querySelector('[class*="_approval"], [class*="_approvalCard"]')
+        const promptOpen = approval !== null && approval.getBoundingClientRect().height > 40
+        /*
+         * The boot film paints its own full-screen layer, but the card lives on
+         * <body> at a high z-index now and surfaced over it. The splash marks
+         * <html data-fairy-splash-caption> for exactly as long as it is up.
+         */
+        const booting = document.documentElement.hasAttribute('data-fairy-splash-caption')
+        if (promptOpen || booting) {
+          panel.host.style.display = 'none'
+          return
+        }
+        panel.host.style.display = ''
+        if (capsule === null || !panel.host.isConnected) return
+        const seatBox = seat.getBoundingClientRect()
+        const capsuleBox = capsule.getBoundingClientRect()
+        /*
+         * Bottom edges are locked together and the height is captured once:
+         * when the composer grows upward for a multi-line draft, the card keeps
+         * its size and its bottom, so it does not stretch or drift. Three equal
+         * bands split that height (each row is flex:1).
+         */
+        /*
+         * Positioned in viewport coordinates and appended to <body>, so the card
+         * no longer depends on which wrapper the shell happens to mount the
+         * composer in — that mismatch is what threw it to the top of the screen
+         * on the new-session view. Both edges match the capsule; 10px of air to
+         * its right, clamped so it never leaves the window.
+         */
+        const height = Math.max(48, Math.round(capsuleBox.height))
+        const top = Math.round(capsuleBox.top)
+        const left = Math.max(0, Math.min(Math.round(capsuleBox.right + 10), window.innerWidth - 134))
+        const key = top + ':' + left + ':' + height
+        if (panel.lastKey === key && panel.host.style.visibility === 'visible') return
+        panel.lastKey = key
+        panel.host.style.height = height + 'px'
+        panel.host.style.top = top + 'px'
+        panel.host.style.left = left + 'px'
+        panel.host.style.visibility = 'visible'
+      }
+      const attach = () => {
+        const seat = document.querySelector('[class*="_composerSeat"], [class*="_composerStack"]')
+        if (panel === null) panel = buildRailPanel()
+        if (!panel.host.isConnected) document.body.appendChild(panel.host)
+        // The capsule can be found even when the host element is unknown, since
+        // the card now lives on <body> and is positioned in viewport space.
+        const capsule = seat === null ? document.querySelector(CARD) : claimRoom(seat)
+        place(seat, capsule)
+        if (lastAuto !== watcher.auto) {
+          lastAuto = watcher.auto
+          panel.syncToggle()
+        }
+      }
+      attach()
+
+      /*
+       * Switching a conversation rebuilds the composer, which drops the card
+       * with it. The 1.2s poll alone left a visible hole until the next tick, so
+       * the shell is watched directly: the observer only fires the cheap
+       * "is the card still attached?" check, and real work happens at most once
+       * per 120ms. A slow poll stays as the safety net.
+       */
+      let lastRun = 0
+      let queued = 0
+      const kick = () => {
+        if (queued !== 0) return
+        queued = window.requestAnimationFrame(() => {
+          queued = 0
+          if (panel !== null && panel.host.isConnected) return
+          const now = Date.now()
+          if (now - lastRun < 100) return
+          lastRun = now
+          attach()
+        })
+      }
+      const observer = new MutationObserver(kick)
+      observer.observe(document.body, { childList: true, subtree: true })
+      /*
+       * Resizing the app moved the capsule but the card kept its old viewport
+       * position until the next poll, which read as the card vanishing for a
+       * second. Both the window resize and the capsule's own box changes now
+       * trigger an immediate re-place.
+       */
+      const relocate = () => {
+        const seat = document.querySelector('[class*="_composerSeat"], [class*="_composerStack"]')
+        const capsule = seat === null ? document.querySelector(CARD) : claimRoom(seat)
+        place(seat, capsule)
+      }
+      window.addEventListener('resize', relocate)
+      let boxObserver = null
+      const watchCapsule = () => {
+        const capsule = document.querySelector(CARD)
+        if (capsule === null || typeof ResizeObserver !== 'function') return
+        if (boxObserver !== null) boxObserver.disconnect()
+        boxObserver = new ResizeObserver(relocate)
+        boxObserver.observe(capsule)
+      }
+      watchCapsule()
+      const repin = window.setInterval(watchCapsule, 2000)
+      const timer = window.setInterval(attach, 1200)
+
+      return () => {
+        window.clearInterval(timer)
+        window.clearInterval(repin)
+        window.removeEventListener('resize', relocate)
+        if (boxObserver !== null) boxObserver.disconnect()
+        observer.disconnect()
+        if (queued !== 0) window.cancelAnimationFrame(queued)
+        if (panel !== null) panel.stop()
+      }
+    }
+
     /* ---------------- plugin ---------------- */
 
     function mount(ctx, label, name, definition, component) {
@@ -504,7 +878,7 @@ window.__ModuleLoader__.load({
     function apply(ctx) {
       try {
       mount(ctx, 'fairy-voice: message action', 'conversation.chat.assistant-actions', { id: 'fairy-voice-action', order: 30 }, VoiceAction)
-      mount(ctx, 'fairy-voice: composer toggle', 'conversation.input.left', { id: 'fairy-voice-toggle', order: 60 }, VoiceToggle)
+      ctx.effect(() => installRailPanel(), 'fairy-voice: composer rail panel')
 
       ctx.effect(() => {
         startWatcher()

@@ -1,6 +1,6 @@
 {
   "name": "dsh-fairy-voice",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Fairy speech replies for DeepSeek Harness: GPT-SoVITS bridge, composer voice card, play button and auto-read",
   "exports": {

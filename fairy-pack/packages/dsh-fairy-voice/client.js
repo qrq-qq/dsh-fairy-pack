@@ -752,19 +752,46 @@ window.__ModuleLoader__.load({
         const approval = (seat === null ? document : seat).querySelector('[class*="_approval"], [class*="_approvalCard"]')
         const promptOpen = approval !== null && approval.getBoundingClientRect().height > 40
         /*
+         * The ask-your-question card (options with buttons) takes the composer's
+         * place the same way an approval does. While it is up the capsule either
+         * disappears or stays mounted at zero size, and a zero-sized capsule used
+         * to drag the rail into the window's top-left corner. Treat both as
+         * "someone else owns the area" and hide, exactly like approvals.
+         */
+        const askCard = document.querySelector('[class*="_question"], [class*="_questions"]')
+        const asking = askCard !== null && askCard.getBoundingClientRect().height > 40
+        /*
          * The boot film paints its own full-screen layer, but the card lives on
          * <body> at a high z-index now and surfaced over it. The splash marks
          * <html data-fairy-splash-caption> for exactly as long as it is up.
          */
         const booting = document.documentElement.hasAttribute('data-fairy-splash-caption')
-        if (promptOpen || booting) {
+        const hide = () => {
           panel.host.style.display = 'none'
+          /* Force a re-place when the composer comes back. */
+          panel.lastKey = ''
+        }
+        if (promptOpen || asking || booting) {
+          hide()
           return
         }
         panel.host.style.display = ''
-        if (capsule === null || !panel.host.isConnected) return
+        if (capsule === null || !panel.host.isConnected) {
+          hide()
+          return
+        }
         const seatBox = seat.getBoundingClientRect()
         const capsuleBox = capsule.getBoundingClientRect()
+        /*
+         * A capsule that is mounted but laid out at zero size (display:none while
+         * a prompt owns the area, or a wrapper that has not been measured yet)
+         * must never be used as an anchor: its rect is 0,0 and the card lands in
+         * the top-left corner. Hide until a real box is back.
+         */
+        if (capsuleBox.width < 80 || capsuleBox.height < 24) {
+          hide()
+          return
+        }
         /*
          * Bottom edges are locked together and the height is captured once:
          * when the composer grows upward for a multi-line draft, the card keeps

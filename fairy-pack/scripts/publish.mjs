@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * 发布三个 npm 包：dsh-fairy-splash、dsh-fairy-voice、dsh-fairy-pack。
+ * 发布四个 npm 包：dsh-fairy-composer、dsh-fairy-splash、dsh-fairy-voice、dsh-fairy-pack。
+ * 顺序即依赖顺序：元包最后发，否则 npm 上还查不到它依赖的那三个。
  *
  *   node scripts/publish.mjs --pack          # 只打包并检查内容，不发布
  *   node scripts/publish.mjs --publish       # 真正发布（需要先 npm login）
@@ -18,7 +19,7 @@ const flag = (k) => argv.includes('--' + k);
 const opt = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
 
 const pnpm = process.env.FAIRY_PNPM || 'pnpm';
-const order = ['dsh-fairy-splash', 'dsh-fairy-voice', 'dsh-fairy-pack'];
+const order = ['dsh-fairy-composer', 'dsh-fairy-splash', 'dsh-fairy-voice', 'dsh-fairy-pack'];
 const bump = opt('bump', '');
 const publish = flag('publish');
 

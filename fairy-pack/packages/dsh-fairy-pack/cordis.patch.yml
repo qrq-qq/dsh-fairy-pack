@@ -1,5 +1,7 @@
 - insert:
     - id: fairy-splash
       name: dsh-fairy-splash
+    - id: fairy-composer
+      name: dsh-fairy-composer
     - id: fairy-voice
       name: dsh-fairy-voice

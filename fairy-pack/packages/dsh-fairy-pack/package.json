@@ -1,8 +1,8 @@
 {
   "name": "dsh-fairy-pack",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
-  "description": "Fairy Pack: H.D.D. skin + Fairy voice + persona preset for DeepSeek Harness",
+  "description": "Fairy Pack: H.D.D. skin + composer trim + Fairy voice + persona preset for DeepSeek Harness",
   "license": "MIT",
   "author": "Fairy Pack",
   "repository": {
@@ -24,6 +24,7 @@
     "tts"
   ],
   "dependencies": {
+    "dsh-fairy-composer": "^1.0.0",
     "dsh-fairy-splash": "^1.0.2",
     "dsh-fairy-voice": "^1.0.0"
   },

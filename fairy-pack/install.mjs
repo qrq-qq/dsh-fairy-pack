@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Fairy Pack 安装器：把 H.D.D. 皮肤、Fairy 语音、Fairy 人格装进本地 DeepSeek Harness。
+ * Fairy Pack 安装器：把 H.D.D. 皮肤、输入区微调、Fairy 语音、Fairy 人格装进本地 DeepSeek Harness。
  *
  *   node install.mjs                    # 安装到 %USERPROFILE%\.dsh
  *   node install.mjs --dry-run          # 只打印计划
@@ -30,7 +30,7 @@ const profile = opt('profile', 'desktop');
 const profileDir = path.join(dshHome, 'profiles', profile);
 const pluginsDir = path.join(dshHome, 'plugins');
 const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 13);
-const ALL_PACKAGES = ['dsh-agent-md', 'dsh-fairy-splash', 'dsh-fairy-voice'];
+const ALL_PACKAGES = ['dsh-agent-md', 'dsh-fairy-splash', 'dsh-fairy-composer', 'dsh-fairy-voice'];
 const ONLY = opt('only', '');
 const PACKAGES = ONLY === ''
   ? ALL_PACKAGES

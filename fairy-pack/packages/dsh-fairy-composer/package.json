@@ -1,0 +1,50 @@
+{
+  "name": "dsh-fairy-composer",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Rounds the gray composer band in DeepSeek Harness Web UI and keeps a gap around the input card inside it",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  },
+  "icon": "./icon.svg",
+  "license": "MIT",
+  "author": "Fairy Pack",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qrq-qq/dsh-fairy-pack.git",
+    "directory": "packages/dsh-fairy-composer"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "composer",
+    "ui"
+  ]
+}

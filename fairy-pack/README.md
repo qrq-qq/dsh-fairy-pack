@@ -7,8 +7,9 @@
 | 模块 | npm 包 | 作用 |
 | --- | --- | --- |
 | 界面皮肤 | `dsh-fairy-splash` | H.D.D. 开机动画、标题条字标、玻璃侧边栏与 rail、对话区背景图与核心 |
+| 输入区 | `dsh-fairy-composer` | 灰色底带圆角、底带与蓝色输入卡片之间留出间隔 |
 | 语音 | `dsh-fairy-voice` | 回复播放按钮、自动朗读、GPT-SoVITS 桥接、首次启动自举运行时 |
-| 元包 | `dsh-fairy-pack` | 只做登记：把上面两个一起挂进插件树 |
+| 元包 | `dsh-fairy-pack` | 只做登记：把上面三个一起挂进插件树 |
 | 人格 | `persona/Fairy.md` | 写入 `~/.dsh/AGENT.md` |
 
 ## 方式一：一键安装（不装 Node 生态）
@@ -18,7 +19,7 @@
 ./install.ps1
 ```
 
-脚本会把两个插件复制到 `%USERPROFILE%\.dsh\plugins`、写进 profile 的 `package.json` 与 `dsh.profile.bundles`、链接进 `node_modules`，最后写入人格（旧文件自动备份）。
+脚本会把三个插件复制到 `%USERPROFILE%\.dsh\plugins`、写进 profile 的 `package.json` 与 `dsh.profile.bundles`、链接进 `node_modules`，最后写入人格（旧文件自动备份）。
 `node install.mjs --dry-run` 可先看计划；`--no-persona` 跳过人格。
 
 ## 方式二：npm 安装（有 DSH 插件管理时）
@@ -27,9 +28,15 @@
 dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 ```
 
-只装一个就是元包，两个内核跟依赖一起进来。人格仍需手动：把 `persona/Fairy.md` 复制到 `~/.dsh/AGENT.md`。
+只装一个就是元包，三个内核跟依赖一起进来。人格仍需手动：把 `persona/Fairy.md` 复制到 `~/.dsh/AGENT.md`。
 
 ## 更新记录
+
+### 1.0.3
+
+- 新增输入区插件 `dsh-fairy-composer`：给输入框外围的灰色底带加圆角，并把底带与蓝色输入卡片之间的间隔交还给 CSS 变量（默认 `12px / 10px / 6px`）。
+- 元包改为三件套：`dsh-fairy-pack` 依赖 `dsh-fairy-splash`、`dsh-fairy-composer`、`dsh-fairy-voice`，`install.mjs` / `uninstall.mjs` 同步收录。
+- 皮肤与语音包体未改动，版本仍是 1.0.2 / 1.0.0。
 
 ### 1.0.2
 
@@ -46,11 +53,11 @@ dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 ```bash
 npm login
 node scripts/publish.mjs --pack                 # 只打包，检查内容
-node scripts/publish.mjs --publish              # 发布三个包
+node scripts/publish.mjs --publish              # 发布四个包
 node scripts/publish.mjs --publish --bump patch # 先升版本再发
 ```
 
-三个包的 `repository` 已指向仓库 `qrq-qq/dsh-fairy-pack`，并各自带上 `directory` 子路径，发布前不需要再改。
+四个包的 `repository` 已指向仓库 `qrq-qq/dsh-fairy-pack`，并各自带上 `directory` 子路径，发布前不需要再改。发布顺序按依赖来：composer → splash → voice → 元包。
 
 ## 语音：两条路
 
@@ -95,5 +102,5 @@ node uninstall.mjs
 ## 已知限制
 
 - 模型权重不随包分发（体积 + 自定义音色），必须自己托管 zip。
-- 皮肤与语音是两个插件内核；元包只负责一起登记，别指望它们合成一个 bundle。
+- 皮肤、输入区与语音是三个插件内核；元包只负责一起登记，别指望它们合成一个 bundle。
 - 开机影片只在冷启动播一次，F5 不重播。

@@ -15,7 +15,7 @@ const opt = (k, d) => {
 const dshHome = path.resolve(opt('dsh-home', path.join(os.homedir(), '.dsh')));
 const profile = opt('profile', 'desktop');
 const profileDir = path.join(dshHome, 'profiles', profile);
-const PACKAGES = ['dsh-agent-md', 'dsh-fairy-splash', 'dsh-fairy-voice'];
+const PACKAGES = ['dsh-agent-md', 'dsh-fairy-splash', 'dsh-fairy-composer', 'dsh-fairy-voice'];
 
 const file = path.join(profileDir, 'package.json');
 if (fs.existsSync(file)) {

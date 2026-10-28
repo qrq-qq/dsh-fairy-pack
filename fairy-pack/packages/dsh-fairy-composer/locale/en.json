@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Composer Band Corners",
+    "description": "Rounds the gray composer band's square corners and keeps a gap around the input card inside it."
+  }
+}

@@ -619,13 +619,13 @@ html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card) {
 /* Same liquid as the rail cards, so the capsule and the sidebar are visibly
    one material. --fairy-liquid-* is shared, so dimming it once dims both. */
 /*
- * The "+" menu (input-trigger) is rendered inside the conversation tree, so the
- * shell's own frame still clipped its top edge even after the card stopped
- * clipping. Open the frame only while a popover is actually up: the menu then
- * paints in full, and the chat frame keeps its rounded clip the rest of the
- * time. :has() is evaluated live, so nothing has to be toggled by script.
+ * The "+" menu (input-trigger) is rendered inside the conversation tree and is
+ * clipped by the conversation frame and its scroller. A :has() rule could not
+ * tell "menu mounted" from "menu actually open" — it stayed on and killed
+ * scrolling — so the clip is released only while the guard in apply() has
+ * measured a real popover on screen and set data-fairy-menu-open.
  */
-html[data-fairy-skin] [class*="_root"][data-phase="active"]:has([role="menu"], [role="listbox"], [class*="_menu"][class*="popover"]) {
+html[data-fairy-skin][data-fairy-menu-open] [class*="_root"][data-phase="active"] {
   overflow: visible !important;
 }
 html[data-fairy-skin] [class*="_composerStack"],
@@ -633,12 +633,10 @@ html[data-fairy-skin] [class*="_composerSeat"] {
   overflow: visible !important;
 }
 /* The measured clipper: the popover's top edge lands exactly on the scroll
-   body's frame, so that frame clips it. Open only while a popover is up.
-   That frame owns an 11px scrollbar gutter (our own ::-webkit-scrollbar width)
-   with scrollbar-gutter:stable; dropping the overflow would also drop the
-   gutter and visibly widen the composer, so the same 11px comes back as
-   padding and the width stays put. */
-html[data-fairy-skin] [class*="_scrollBody"]:has([role="menu"], [class*="_menu"]) {
+   body's frame, so that frame clips it. The 11px padding replaces the
+   scrollbar gutter (our own ::-webkit-scrollbar width) that disappears with
+   the overflow, so nothing changes width while the menu is open. */
+html[data-fairy-skin][data-fairy-menu-open] [class*="_scrollBody"] {
   overflow: visible !important;
   padding-right: 11px !important;
 }
@@ -2583,6 +2581,43 @@ html[data-fairy-skin] .fs-rail-stats::before {
             if (!hadDark) body.removeAttribute('data-ds-dark-theme')
           }
         }, 'fairy-splash: dark H.D.D. skin')
+
+        /*
+         * Popover clip guard. The composer's "+" menu is absolutely positioned
+         * inside the card and is clipped by the conversation scroller; a :has()
+         * rule cannot tell "menu mounted" from "menu actually open", and a rule
+         * that stayed on killed scrolling. So the clip is released only while a
+         * real popover is measured on screen, published as one attribute.
+         */
+        effect(() => {
+          let raf = 0
+          let last = null
+          const sync = () => {
+            raf = 0
+            let open = false
+            for (const node of document.querySelectorAll('[class*="_menu"]')) {
+              const box = node.getBoundingClientRect()
+              if (box.height > 60 && box.width > 180) { open = true; break }
+            }
+            if (open === last) return
+            last = open
+            if (open) document.documentElement.setAttribute('data-fairy-menu-open', '')
+            else document.documentElement.removeAttribute('data-fairy-menu-open')
+          }
+          const schedule = () => { if (raf === 0) raf = window.requestAnimationFrame(sync) }
+          const observer = new MutationObserver(schedule)
+          observer.observe(document.body, { childList: true, subtree: true })
+          window.addEventListener('resize', schedule)
+          const timer = window.setInterval(schedule, 700)
+          sync()
+          return () => {
+            window.clearInterval(timer)
+            window.cancelAnimationFrame(raf)
+            window.removeEventListener('resize', schedule)
+            observer.disconnect()
+            document.documentElement.removeAttribute('data-fairy-menu-open')
+          }
+        }, 'fairy-splash: popover clip guard')
 
         effect(() => {
           /* Mounted lazily: a cold app start can run this effect before the

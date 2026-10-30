@@ -19,7 +19,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -34,7 +34,7 @@ const opt = (k, d) => {
 const flag = k => argv.includes('--' + k);
 
 const dry = flag('dry-run');
-const verifyOnly = flag('verify-only');
+const verifyOnly = flag('verify-only') || flag('doctor');
 const noRestart = flag('no-restart');
 const delaySec = Math.max(0, Number(opt('restart-delay', '8')) || 0);
 
@@ -135,10 +135,13 @@ act('写入 profile/package.json（依赖指向新副本 + bundles 去重）', (
   const file = path.join(profileDir, 'package.json');
   const text = fs.readFileSync(file, 'utf8');
   fs.writeFileSync(file + '.bak-fairy-pack-' + stamp, text);
-  const pkg = JSON.parse(text);
+  /* Windows tools love a BOM, and JSON.parse chokes on it — that used to abort
+     the install after the plugins were copied but before the profile knew about
+     them, which reads as "worked once, gone after a restart". */
+  const pkg = JSON.parse(text.replace(/^\uFEFF/, ''));
   pkg.dependencies ??= {};
   for (const name of PACKAGES) {
-    pkg.dependencies[name] = 'link:' + path.join(pluginsDir, name).split(path.sep).join('/');
+    pkg.dependencies[name] = 'file:' + path.join(pluginsDir, name).split(path.sep).join('/');
   }
   pkg.dsh ??= {};
   pkg.dsh.profile ??= {};
@@ -147,8 +150,48 @@ act('写入 profile/package.json（依赖指向新副本 + bundles 去重）', (
     for (let i = bundles.length - 1; i >= 0; i--) if (bundles[i] === name) bundles.splice(i, 1);
   }
   pkg.dsh.profile.bundles = [...bundles, ...PACKAGES];
-  fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
+  fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+  /* Read it back: a silent write failure is exactly what turns into "it worked
+     until the next restart". */
+  const again = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+  for (const name of PACKAGES) {
+    if (!again.dependencies?.[name] || !again.dsh?.profile?.bundles?.includes(name)) {
+      throw new Error('profile/package.json did not keep ' + name);
+    }
+  }
 });
+
+/* DSH treats the profile as a pnpm project. A manifest edit alone is a claim;
+   letting the project's own package manager write the lockfile entry is what
+   keeps the plugins across a restart. */
+function findPnpm() {
+  const explicit = process.env.FAIRY_PNPM;
+  if (explicit && fs.existsSync(explicit)) return { node: process.execPath, script: explicit };
+  const runtimes = path.join(dshHome, 'dsh-runtimes');
+  if (fs.existsSync(runtimes)) {
+    for (const entry of fs.readdirSync(runtimes)) {
+      const candidate = path.join(runtimes, entry, 'dependencies', 'pnpm', 'bin', 'pnpm.mjs');
+      if (fs.existsSync(candidate)) return { node: process.execPath, script: candidate };
+    }
+  }
+  return null;
+}
+
+const pnpmBin = findPnpm();
+if (pnpmBin !== null) {
+  act('用 profile 自己的 pnpm 写入依赖（锁文件与 node_modules 对齐）', () => {
+    try {
+      execFileSync(pnpmBin.node, [pnpmBin.script, 'install', '--no-frozen-lockfile'], {
+        cwd: profileDir,
+        stdio: 'pipe',
+        timeout: 180000,
+        windowsHide: true,
+      });
+    } catch (error) {
+      say('  提示：pnpm install 没跑通（' + String(error.status ?? '?') + '），链接仍在；下次启动若界面回退，再跑一次安装器即可。');
+    }
+  });
+}
 
 if (!flag('no-persona')) {
   const persona = path.join(HERE, 'persona', 'Fairy.md');
@@ -230,6 +273,38 @@ if (failed) {
   process.exit(1);
 }
 say('自检全部通过。');
+
+/* --doctor prints what DSH will actually mount, so "the skin came back after a
+   restart" can arrive as one block instead of a guess. */
+if (flag('doctor')) {
+  say('');
+  say('状态快照（--doctor）：');
+  say('  .dsh         ' + dshHome);
+  say('  profile      ' + profileDir);
+  say('  .dsh/plugins ' + (fs.existsSync(pluginsDir) ? 'yes' : 'no'));
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(profileDir, 'package.json'), 'utf8').replace(/^\uFEFF/, ''));
+    for (const name of PACKAGES) {
+      say('  dep ' + name.padEnd(24) + String(pkg.dependencies?.[name] ?? '(missing)'));
+      say('      bundled: ' + String((pkg.dsh?.profile?.bundles ?? []).includes(name)));
+      const link = path.join(profileDir, 'node_modules', name);
+      let real = '(missing)';
+      try { real = (fs.realpathSync.native || fs.realpathSync)(link); } catch { /* keep */ }
+      say('      node_modules -> ' + real);
+      try {
+        say('      version: ' + JSON.parse(fs.readFileSync(path.join(link, 'package.json'), 'utf8')).version);
+      } catch {
+        say('      version: (unreadable)');
+      }
+    }
+    const lock = path.join(profileDir, 'pnpm-lock.yaml');
+    say('  pnpm-lock.yaml: ' + (fs.existsSync(lock)
+      ? fs.statSync(lock).size + ' B, ' + fs.statSync(lock).mtime.toISOString()
+      : 'missing'));
+  } catch (error) {
+    say('  profile manifest unreadable: ' + String(error.message || error));
+  }
+}
 
 // ---------------------------------------------------------------- restart
 function scheduleRestart() {

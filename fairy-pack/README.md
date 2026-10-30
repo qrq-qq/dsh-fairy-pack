@@ -39,6 +39,13 @@ dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 
 ## 更新记录
 
+### 1.0.11
+
+- **重启后皮肤消失**：安装器写 profile 的 `package.json` 时，若文件带 BOM，`JSON.parse` 会抛错——插件已复制、链接已建，但依赖与 `bundles` 没写进去。下次启动 pnpm 按 manifest 把「不在依赖树里」的包挪进 `node_modules/.ignored`，界面就回到初始状态。
+- 现在写入前剥 BOM、写后回读校验；依赖协议从 `link:` 改为 `file:`；安装尾步用 profile 自己的 pnpm 写一次锁文件。
+- 新增 `--doctor`：只读打印 profile 路径、依赖、bundles、链接指向、包版本与锁文件状态，界面回退时跑一次就能定位。
+- 三内核版本不变：皮肤 1.0.6、composer 1.0.1、语音 1.0.3。
+
 ### 1.0.10
 
 - **高对话框被切**：审批卡、提问卡、长草稿同样长在输入区里向上展开，被会话区的滚动容器裁掉上半截。

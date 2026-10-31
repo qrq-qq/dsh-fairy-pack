@@ -39,6 +39,12 @@ dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 
 ## 更新记录
 
+### 1.0.12
+
+- **2.25 GB 运行时的解包修复**：自举全程改用流——拼接边写边算 sha256，解包只把中央目录读进内存，每个条目用带偏移的读流直接解压落盘。
+- 同时支持 ZIP64 的**单条目**字段（Python 打包时，跟在 >2 GiB 条目后面的条目会把真实偏移放进 0x0001 扩展字段），此前会读成 `0xFFFFFFFF` 而报「本地头损坏」。
+- 语音 1.0.4、元包 1.0.12；皮肤 1.0.6、composer 1.0.1 未变。
+
 ### 1.0.11
 
 - **重启后皮肤消失**：安装器写 profile 的 `package.json` 时，若文件带 BOM，`JSON.parse` 会抛错——插件已复制、链接已建，但依赖与 `bundles` 没写进去。下次启动 pnpm 按 manifest 把「不在依赖树里」的包挪进 `node_modules/.ignored`，界面就回到初始状态。

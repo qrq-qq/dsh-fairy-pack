@@ -39,6 +39,12 @@ dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 
 ## 更新记录
 
+### 1.0.13
+
+- **英文朗读会整段失败**：运行时清单写的 `nltkData` 是 `voice-runtime/Python310/nltk_data`，包里实际解到根目录 `nltk_data/`。NLTK 只在遇到英文时找 cmudict / 词性标注器，找不到就抛 LookupError，整段以 `400 tts failed` 结束；纯中文不经过 NLTK，所以只有含英文的句子会中招。
+- 修法：清单路径不可用时回退到根目录 `nltk_data/`，不需要重传 2.25 GB 运行时。
+- 语音 1.0.5、元包 1.0.13。
+
 ### 1.0.12
 
 - **2.25 GB 运行时的解包修复**：自举全程改用流——拼接边写边算 sha256，解包只把中央目录读进内存，每个条目用带偏移的读流直接解压落盘。

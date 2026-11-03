@@ -724,7 +724,40 @@ window.__ModuleLoader__.load({
        * the seat it floated above the capsule's midpoint and sat over the send
        * button.
        */
+      /*
+       * Anchors are matched structurally, never only by the shell's CSS-module
+       * hash: `GRgSLq_card` / `RlGAzG_card` are build-specific, and on any other
+       * build the lookup missed, the card stayed at visibility:hidden, and the
+       * whole rail silently disappeared. Known hashes first, then the widest
+       * real box inside the seat, then walk up from the editor.
+       */
       const CARD = '[class*="GRgSLq_card"], [class*="RlGAzG_card"]'
+      const frameOf = (node) => {
+        const box = node.getBoundingClientRect()
+        return box.width >= 240 && box.height >= 48 ? box : null
+      }
+      const resolveCapsule = (scope) => {
+        const root = scope ?? document
+        const known = root.querySelector(CARD)
+        if (known !== null && frameOf(known) !== null) return known
+        let best = null
+        let bestWidth = 0
+        for (const node of root.querySelectorAll('[class*="_card"]')) {
+          const box = frameOf(node)
+          if (box === null) continue
+          if (box.width > bestWidth) {
+            best = node
+            bestWidth = box.width
+          }
+        }
+        if (best !== null) return best
+        let up = root.querySelector('textarea, [contenteditable="true"]')
+        for (let i = 0; i < 6 && up !== null; i += 1) {
+          if (frameOf(up) !== null) return up
+          up = up.parentElement
+        }
+        return null
+      }
       /*
        * One layout for both screens: the new-conversation composer reserves the
        * same right-hand column as a live chat, so the voice card sits in the
@@ -733,7 +766,7 @@ window.__ModuleLoader__.load({
        * reads as a bug.
        */
       const claimRoom = (seat) => {
-        const capsule = seat.querySelector(CARD)
+        const capsule = resolveCapsule(seat)
         if (capsule === null) return null
         seat.setAttribute('data-fv-slot', '')
         return capsule
@@ -781,7 +814,8 @@ window.__ModuleLoader__.load({
           hide()
           return
         }
-        const seatBox = seat.getBoundingClientRect()
+        /* seat can be null when the shell mounts the capsule outside a known
+           composer wrapper; never call getBoundingClientRect on null. */
         const capsuleBox = capsule.getBoundingClientRect()
         /*
          * A capsule that is mounted but laid out at zero size (display:none while
@@ -823,7 +857,7 @@ window.__ModuleLoader__.load({
         if (!panel.host.isConnected) document.body.appendChild(panel.host)
         // The capsule can be found even when the host element is unknown, since
         // the card now lives on <body> and is positioned in viewport space.
-        const capsule = seat === null ? document.querySelector(CARD) : claimRoom(seat)
+        const capsule = seat === null ? resolveCapsule(document) : claimRoom(seat)
         place(seat, capsule)
         if (lastAuto !== watcher.auto) {
           lastAuto = watcher.auto
@@ -862,13 +896,13 @@ window.__ModuleLoader__.load({
        */
       const relocate = () => {
         const seat = document.querySelector('[class*="_composerSeat"], [class*="_composerStack"]')
-        const capsule = seat === null ? document.querySelector(CARD) : claimRoom(seat)
+        const capsule = seat === null ? resolveCapsule(document) : claimRoom(seat)
         place(seat, capsule)
       }
       window.addEventListener('resize', relocate)
       let boxObserver = null
       const watchCapsule = () => {
-        const capsule = document.querySelector(CARD)
+        const capsule = resolveCapsule(document)
         if (capsule === null || typeof ResizeObserver !== 'function') return
         if (boxObserver !== null) boxObserver.disconnect()
         boxObserver = new ResizeObserver(relocate)

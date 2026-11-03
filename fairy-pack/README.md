@@ -39,6 +39,19 @@ dsh plugin add dsh-fairy-pack        # 或 pnpm add dsh-fairy-pack -w
 
 ## 更新记录
 
+### 1.0.15
+
+- **语音卡在别的构建上整块不显示**：锚点写死了 CSS Module 哈希（`GRgSLq_card` / `RlGAzG_card`），换构建就查不到输入卡片，卡片永远 `visibility:hidden`。
+- 改为结构锚点：已知哈希 → 输入区内最宽的真实卡片 → 从编辑框向上找有实际高度的容器；另修一处 `seat` 为空时的空指针。
+- 语音 1.0.6、元包 1.0.15。皮肤停在 1.0.6：1.0.7 的批量替换已撤回——`[class*="_suffix"]` 这种后缀选择器太宽，会误伤新会话按钮内部与侧栏滚动容器。
+
+### 1.0.14
+
+- **别的构建上语音卡整块不显示**：语音卡靠 `GRgSLq_card` / `RlGAzG_card` 这种 CSS Module 哈希找输入卡片，而哈希随 DSH 构建变化。换一台机器/换一个版本，选择器落空 → 卡片一直 `visibility:hidden`。
+- 现在按结构找：先试已知哈希，失败则在输入区内取「最宽的真实卡片」（宽 ≥ 240、高 ≥ 48），再失败就从编辑框向上六层找第一个有实际高度的容器。
+- 同时去掉一处 `seat === null` 时的 `getBoundingClientRect()` 抛错。
+- 语音 1.0.6、元包 1.0.14；皮肤 / composer 未变。
+
 ### 1.0.13
 
 - **英文朗读会整段失败**：运行时清单写的 `nltkData` 是 `voice-runtime/Python310/nltk_data`，包里实际解到根目录 `nltk_data/`。NLTK 只在遇到英文时找 cmudict / 词性标注器，找不到就抛 LookupError，整段以 `400 tts failed` 结束；纯中文不经过 NLTK，所以只有含英文的句子会中招。

@@ -2583,6 +2583,71 @@ html[data-fairy-skin] .fs-rail-stats::before {
         }, 'fairy-splash: dark H.D.D. skin')
 
         /*
+         * Cross-build guard. The shell's CSS-module hashes (BynINW_sidebarCol,
+         * GRgSLq_card, …) change between builds, and then every hashed selector
+         * in this skin silently matches nothing. The marker below is set only
+         * when NONE of the known hashes exist, and the structural fallback block
+         * is scoped to that marker — so a build that already matches never sees
+         * the broader selectors, and a build that does not still gets a surface.
+         */
+        effect(() => {
+          const KNOWN = '[class*="GRgSLq_card"], [class*="RlGAzG_card"], [class*="BynINW_sidebarCol"], [class*="BynINW_frame"], [class*="Dc7zOa_root"], [class*="xz4KEq_root"]'
+          const LEGACY_CSS = `
+html[data-fairy-skin-legacy] [class*="_sidebarCol"] {
+  background:
+    linear-gradient(rgba(92, 128, 255, .034) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92, 128, 255, .034) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(7, 12, 24, .93), rgba(4, 7, 14, .97)) !important;
+  background-size: 22px 22px, 22px 22px, auto !important;
+  border-right: 1px solid rgba(91, 124, 220, .16) !important;
+}
+html[data-fairy-skin-legacy] [class*="_composerSeat"],
+html[data-fairy-skin-legacy] [class*="_composerStack"] {
+  background: linear-gradient(180deg, #4a4f57 0%, #3b4048 100%) !important;
+  box-shadow: none !important;
+}
+html[data-fairy-skin-legacy] [class*="_composerSeat"] [class*="_card"],
+html[data-fairy-skin-legacy] [class*="_composerStack"] [class*="_card"] {
+  background: linear-gradient(160deg, rgba(57, 120, 237, .44) 0%, rgba(25, 52, 153, .54) 52%, rgba(9, 18, 52, .66) 100%) !important;
+  border: 1px solid rgba(110, 150, 245, .22) !important;
+  border-top-color: rgba(196, 214, 255, .38) !important;
+  border-radius: 20px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 18px 44px rgba(0, 0, 0, .46) !important;
+}
+html[data-fairy-skin-legacy] [class*="_scrollBody"] {
+  background: transparent !important;
+}
+`
+          const tag = document.createElement('style')
+          tag.id = 'fairy-skin-legacy'
+          tag.textContent = LEGACY_CSS
+          document.head.appendChild(tag)
+
+          let last = null
+          let raf = 0
+          const sync = () => {
+            raf = 0
+            const legacy = document.querySelector(KNOWN) === null
+            if (legacy === last) return
+            last = legacy
+            if (legacy) document.documentElement.setAttribute('data-fairy-skin-legacy', '')
+            else document.documentElement.removeAttribute('data-fairy-skin-legacy')
+          }
+          const schedule = () => { if (raf === 0) raf = window.requestAnimationFrame(sync) }
+          const observer = new MutationObserver(schedule)
+          observer.observe(document.body, { childList: true, subtree: true })
+          const timer = window.setInterval(sync, 2000)
+          sync()
+          return () => {
+            window.clearInterval(timer)
+            window.cancelAnimationFrame(raf)
+            observer.disconnect()
+            tag.remove()
+            document.documentElement.removeAttribute('data-fairy-skin-legacy')
+          }
+        }, 'fairy-splash: legacy-build marker')
+
+        /*
          * Popover clip guard. The composer's "+" menu is absolutely positioned
          * inside the card and is clipped by the conversation scroller; a :has()
          * rule cannot tell "menu mounted" from "menu actually open", and a rule

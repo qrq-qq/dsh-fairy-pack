@@ -640,8 +640,15 @@ html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card) {
 html[data-fairy-skin][data-fairy-menu-open] [class*="_root"][data-phase="active"] {
   overflow: visible !important;
 }
-html[data-fairy-skin] [class*="_composerStack"],
-html[data-fairy-skin] [class*="_composerSeat"] {
+/*
+ * These two used to be released unconditionally, which quietly disabled the
+ * scrolling *inside* an approval or ask-me card: the card grew to full height
+ * instead of scrolling, so its 拒绝 / 允许 row ended up below the window with
+ * nothing able to reach it. They belong to the popover treatment, so they now
+ * follow it.
+ */
+html[data-fairy-skin][data-fairy-menu-open] [class*="_composerStack"],
+html[data-fairy-skin][data-fairy-menu-open] [class*="_composerSeat"] {
   overflow: visible !important;
 }
 /* The measured clipper: the popover's top edge lands exactly on the scroll
@@ -651,6 +658,16 @@ html[data-fairy-skin] [class*="_composerSeat"] {
 html[data-fairy-skin][data-fairy-menu-open] [class*="_scrollBody"] {
   overflow: visible !important;
   padding-right: 11px !important;
+}
+/*
+ * Tall cards get the opposite treatment. Releasing the clip let an approval
+ * card grow past the bottom of the window, so its 拒绝 / 允许 row was off-screen
+ * and unreachable — the scroller had nothing to scroll. Cap the card to the
+ * space above the composer and let it scroll inside itself instead.
+ */
+html[data-fairy-skin][data-fairy-card-open] :is([class*="_approval"], [class*="_approvalCard"], [class*="Zf6DNq_"], [class*="_question"], [class*="_questions"], [role="dialog"]) {
+  max-height: calc(100vh - var(--dsh-windows-titlebar-height, 40px) - 150px) !important;
+  overflow-y: auto !important;
 }
 html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card)::before {
   content: "";
@@ -2685,28 +2702,38 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
           }
           const sync = () => {
             raf = 0
-            let open = visibleTall('[class*="_menu"]', 180, 60)
-            if (!open) open = visibleTall('[class*="_approval"], [class*="_question"], [class*="_planReview"]', 160, 80)
-            /* A dialog or a tall card that took the composer's place is a card
-               too, whatever its class is called on this build. */
-            if (!open) open = visibleTall('[role="dialog"], [aria-modal="true"]', 200, 120)
-            if (!open) {
-              const seat = document.querySelector('[class*="_composerSeat"]')
-              if (seat !== null) {
-                for (const node of seat.querySelectorAll('[class*="_card"]')) {
-                  const box = node.getBoundingClientRect()
-                  if (box.width > 240 && box.height > 230) { open = true; break }
+            const menu = visibleTall('[class*="_menu"]', 180, 60)
+            let card = false
+            if (!menu) {
+              card = visibleTall('[class*="_approval"], [class*="_question"], [class*="_planReview"]', 160, 80)
+              /* A dialog or a tall card that took the composer's place is a card
+                 too, whatever its class is called on this build. */
+              if (!card) card = visibleTall('[role="dialog"], [aria-modal="true"]', 200, 120)
+              if (!card) {
+                const seat = document.querySelector('[class*="_composerSeat"]')
+                if (seat !== null) {
+                  for (const node of seat.querySelectorAll('[class*="_card"]')) {
+                    const box = node.getBoundingClientRect()
+                    if (box.width > 240 && box.height > 230) { card = true; break }
+                  }
                 }
               }
+              if (!card) {
+                const stack = document.querySelector('[class*="_composerStack"]')
+                if (stack !== null) card = stack.getBoundingClientRect().height > 210
+              }
             }
-            if (!open) {
-              const stack = document.querySelector('[class*="_composerStack"]')
-              if (stack !== null) open = stack.getBoundingClientRect().height > 210
-            }
-            if (open === last) return
-            last = open
-            if (open) document.documentElement.setAttribute('data-fairy-menu-open', '')
-            else document.documentElement.removeAttribute('data-fairy-menu-open')
+            /* Menus need the clip released; tall cards must instead be capped and
+               scroll inside themselves, or their buttons end up below the window
+               where nothing can reach them. */
+            const next = (menu ? 'm' : '') + (card ? 'c' : '')
+            if (next === last) return
+            last = next
+            const root = document.documentElement
+            if (menu) root.setAttribute('data-fairy-menu-open', '')
+            else root.removeAttribute('data-fairy-menu-open')
+            if (card) root.setAttribute('data-fairy-card-open', '')
+            else root.removeAttribute('data-fairy-card-open')
           }
           const schedule = () => { if (raf === 0) raf = window.requestAnimationFrame(sync) }
           const observer = new MutationObserver(schedule)
@@ -2720,6 +2747,7 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
             window.removeEventListener('resize', schedule)
             observer.disconnect()
             document.documentElement.removeAttribute('data-fairy-menu-open')
+            document.documentElement.removeAttribute('data-fairy-card-open')
           }
         }, 'fairy-splash: popover clip guard')
 

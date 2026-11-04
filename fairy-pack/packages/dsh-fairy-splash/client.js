@@ -2626,6 +2626,7 @@ html[data-fairy-skin] .fs-rail-stats::before {
             return false
           }
           let ticks = 0
+          let absent = 0
           const sync = () => {
             raf = 0
             let open = billingOpen()
@@ -2635,6 +2636,14 @@ html[data-fairy-skin] .fs-rail-stats::before {
               const text = body.innerText || ''
               open = text.includes('对公汇款') && text.includes('在线充值')
             }
+            /* Structural rule, independent of labels: the skin only belongs to the
+               chat surface. No composer for two ticks in a row means the shell is
+               showing one of its own pages (billing, settings, a task detail), and
+               those all look better — and more consistent — without us. */
+            const chat = document.querySelector('[class*="_composerSeat"], [class*="_composerStack"], [class*="_composer"]')
+            if (chat === null) absent += 1
+            else absent = 0
+            if (absent >= 2) open = true
             ticks += 1
             if (open === last) return
             last = open

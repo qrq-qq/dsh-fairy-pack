@@ -201,6 +201,18 @@ html[data-fairy-skin][data-fairy-splash-caption] [data-windows-menu] {
   filter: drop-shadow(0 1px 9px rgba(0, 0, 0, .8));
   pointer-events: none;
 }
+/*
+ * The minimise / maximise / close buttons are a native Electron title-bar
+ * overlay: the app paints them in its own colour (#1d1d21 here) and a plugin
+ * cannot repaint them. What it can do is paint the strip they sit on, so the
+ * neighbourhood matches instead of showing our near-black behind a grey patch —
+ * the mismatch was visible on routes the skin does not dress, like the billing
+ * page. The selector is structural: the menu row inside the title bar is the
+ * overlay's neighbour, and its direct parent is that strip.
+ */
+html[data-fairy-skin] *:has(> [data-windows-menu]) {
+  background-color: #1d1d21 !important;
+}
 html[data-fairy-skin][data-fairy-splash-caption] .BynINW_frame:before {
   background: transparent !important;
 }

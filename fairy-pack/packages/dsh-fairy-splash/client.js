@@ -2648,8 +2648,12 @@ html[data-fairy-skin] .fs-rail-stats::before {
             if (open === last) return
             last = open
             if (open) {
+              /* Skin off only. Flipping the theme as well made the shell repaint
+                 its title bar in the light palette, and that repaint did not come
+                 back when the page closed — the corner ended up on a third
+                 colour. Leave the dark palette alone; the stock page has its own
+                 white surface anyway. */
               root.removeAttribute('data-fairy-skin')
-              body.removeAttribute('data-ds-dark-theme')
             } else {
               root.setAttribute('data-fairy-skin', '')
               if (!body.hasAttribute('data-ds-dark-theme')) body.setAttribute('data-ds-dark-theme', '')
@@ -2667,46 +2671,7 @@ html[data-fairy-skin] .fs-rail-stats::before {
           }
         }, 'fairy-splash: stock look on the billing page')
 
-        /*
-         * The minimise / maximise / close buttons are a transparent native
-         * overlay: whatever the page paints behind them shows through. The title
-         * strip is our #3b4048, but the frame under that corner is the app's own
-         * near-black — that difference is the seam at the top-right. Paint the
-         * corner with the strip colour; pointer-events stay off so the buttons
-         * keep working, and the fill follows the skin attribute.
-         */
-        effect(() => {
-          if (!document.body) return undefined
-          const style = document.createElement('style')
-          style.id = 'fairy-titlebar-fill-style'
-          style.textContent = '#fairy-titlebar-fill{display:none}html[data-fairy-skin] #fairy-titlebar-fill{display:block}'
-          document.head.appendChild(style)
-          const fill = document.createElement('div')
-          fill.id = 'fairy-titlebar-fill'
-          fill.style.cssText = 'position:fixed;top:0;right:0;left:190px;height:var(--dsh-windows-titlebar-height,40px);background:#3b4048;z-index:2147482900;pointer-events:none'
-          document.body.appendChild(fill)
-          /*
-           * Sample the strip's real colour instead of trusting one literal: the
-           * app repaints its frame when another window takes focus, so a fixed
-           * value drifts out of sync the moment the billing window opens. The
-           * caption menu sits inside the strip, so its parent's background is the
-           * colour to copy; transparent means nobody painted it and the skin's
-           * own value is right.
-           */
-          const sample = () => {
-            const menu = document.querySelector('[data-windows-menu]')
-            const host = menu === null ? null : menu.parentElement
-            const bg = host === null ? '' : getComputedStyle(host).backgroundColor
-            fill.style.background = bg === '' || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent' ? '#3b4048' : bg
-          }
-          sample()
-          const timer = window.setInterval(sample, 500)
-          return () => {
-            window.clearInterval(timer)
-            fill.remove()
-            style.remove()
-          }
-        }, 'fairy-splash: window-button corner')
+
 
         /*
          * Cross-build guard. The shell's CSS-module hashes (BynINW_sidebarCol,

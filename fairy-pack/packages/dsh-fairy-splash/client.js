@@ -2613,17 +2613,29 @@ html[data-fairy-skin] .fs-rail-stats::before {
           let last = null
           let raf = 0
           const billingOpen = () => {
-            for (const el of document.querySelectorAll('a, button, span')) {
-              if (el.childElementCount !== 0) continue
-              if (el.textContent.trim() !== '返回 DeepSeek Harness') continue
+            /* The link may be wrapped in an extra node, so match on the visible
+               text of any small element, not only on a leaf span. */
+            for (const el of document.querySelectorAll('a, button, span, div')) {
+              if (el.childElementCount > 2) continue
+              const text = (el.textContent || '').trim()
+              if (text !== '返回 DeepSeek Harness' && !text.endsWith('返回 DeepSeek Harness')) continue
+              if (text.length > 40) continue
               const box = el.getBoundingClientRect()
               if (box.width > 0 && box.height > 0) return true
             }
             return false
           }
+          let ticks = 0
           const sync = () => {
             raf = 0
-            const open = billingOpen()
+            let open = billingOpen()
+            /* Fallback signal, sampled instead of on every mutation: the billing
+               page is the only view with both of these labels. */
+            if (!open && ticks % 3 === 0) {
+              const text = body.innerText || ''
+              open = text.includes('对公汇款') && text.includes('在线充值')
+            }
+            ticks += 1
             if (open === last) return
             last = open
             if (open) {

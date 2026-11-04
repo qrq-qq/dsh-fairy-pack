@@ -2668,6 +2668,30 @@ html[data-fairy-skin] .fs-rail-stats::before {
         }, 'fairy-splash: stock look on the billing page')
 
         /*
+         * The minimise / maximise / close buttons are a transparent native
+         * overlay: whatever the page paints behind them shows through. The title
+         * strip is our #3b4048, but the frame under that corner is the app's own
+         * near-black — that difference is the seam at the top-right. Paint the
+         * corner with the strip colour; pointer-events stay off so the buttons
+         * keep working, and the fill follows the skin attribute.
+         */
+        effect(() => {
+          if (!document.body) return undefined
+          const style = document.createElement('style')
+          style.id = 'fairy-titlebar-fill-style'
+          style.textContent = '#fairy-titlebar-fill{display:none}html[data-fairy-skin] #fairy-titlebar-fill{display:block}'
+          document.head.appendChild(style)
+          const fill = document.createElement('div')
+          fill.id = 'fairy-titlebar-fill'
+          fill.style.cssText = 'position:fixed;top:0;right:0;width:190px;height:var(--dsh-windows-titlebar-height,40px);background:#3b4048;z-index:2147482900;pointer-events:none'
+          document.body.appendChild(fill)
+          return () => {
+            fill.remove()
+            style.remove()
+          }
+        }, 'fairy-splash: window-button corner')
+
+        /*
          * Cross-build guard. The shell's CSS-module hashes (BynINW_sidebarCol,
          * GRgSLq_card, …) change between builds, and then every hashed selector
          * in this skin silently matches nothing. The marker below is set only

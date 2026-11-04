@@ -201,18 +201,6 @@ html[data-fairy-skin][data-fairy-splash-caption] [data-windows-menu] {
   filter: drop-shadow(0 1px 9px rgba(0, 0, 0, .8));
   pointer-events: none;
 }
-/*
- * The minimise / maximise / close buttons are a native Electron title-bar
- * overlay: the app paints them in its own colour (#1d1d21 here) and a plugin
- * cannot repaint them. What it can do is paint the strip they sit on, so the
- * neighbourhood matches instead of showing our near-black behind a grey patch —
- * the mismatch was visible on routes the skin does not dress, like the billing
- * page. The selector is structural: the menu row inside the title bar is the
- * overlay's neighbour, and its direct parent is that strip.
- */
-html[data-fairy-skin] *:has(> [data-windows-menu]) {
-  background-color: #1d1d21 !important;
-}
 html[data-fairy-skin][data-fairy-splash-caption] .BynINW_frame:before {
   background: transparent !important;
 }
@@ -2610,6 +2598,53 @@ html[data-fairy-skin] .fs-rail-stats::before {
             if (!hadDark) body.removeAttribute('data-ds-dark-theme')
           }
         }, 'fairy-splash: dark H.D.D. skin')
+
+        /*
+         * The billing view belongs to the shell, not to us: its own header sits
+         * a shade away from the native window buttons, and trying to paint that
+         * gap from CSS only moved the seam around. Hand the whole window back to
+         * the stock look while that view is open — the back link is its only
+         * fixed landmark — and take the skin up again when it closes.
+         */
+        effect(() => {
+          if (!document.body) return undefined
+          const root = document.documentElement
+          const body = document.body
+          let last = null
+          let raf = 0
+          const billingOpen = () => {
+            for (const el of document.querySelectorAll('a, button, span')) {
+              if (el.childElementCount !== 0) continue
+              if (el.textContent.trim() !== '返回 DeepSeek Harness') continue
+              const box = el.getBoundingClientRect()
+              if (box.width > 0 && box.height > 0) return true
+            }
+            return false
+          }
+          const sync = () => {
+            raf = 0
+            const open = billingOpen()
+            if (open === last) return
+            last = open
+            if (open) {
+              root.removeAttribute('data-fairy-skin')
+              body.removeAttribute('data-ds-dark-theme')
+            } else {
+              root.setAttribute('data-fairy-skin', '')
+              if (!body.hasAttribute('data-ds-dark-theme')) body.setAttribute('data-ds-dark-theme', '')
+            }
+          }
+          const schedule = () => { if (raf === 0) raf = window.requestAnimationFrame(sync) }
+          const observer = new MutationObserver(schedule)
+          observer.observe(body, { childList: true, subtree: true })
+          const timer = window.setInterval(sync, 800)
+          sync()
+          return () => {
+            window.clearInterval(timer)
+            window.cancelAnimationFrame(raf)
+            observer.disconnect()
+          }
+        }, 'fairy-splash: stock look on the billing page')
 
         /*
          * Cross-build guard. The shell's CSS-module hashes (BynINW_sidebarCol,

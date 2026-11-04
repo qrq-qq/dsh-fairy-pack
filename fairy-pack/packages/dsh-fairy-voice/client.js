@@ -793,8 +793,24 @@ window.__ModuleLoader__.load({
          * Treating a zero-height node as "approval open" is what made the card
          * vanish for good.
          */
-        const approval = (seat === null ? document : seat).querySelector('[class*="_approval"], [class*="_approvalCard"]')
-        const promptOpen = approval !== null && approval.getBoundingClientRect().height > 40
+        /*
+         * The shell's approval card is not named "_approval" — its CSS-module
+         * classes are the build's hash (Zf6DNq_card in the current one), so a
+         * class test only ever caught it by luck. Match the card by what it
+         * always has: a visible deny button, in either locale.
+         */
+        const denyButton = () => {
+          for (const btn of document.querySelectorAll('button')) {
+            const label = (btn.textContent || '').trim()
+            if (label === '' || label.length > 8) continue
+            if (!/^(拒绝|不允许|Deny|Reject|Deny once)$/i.test(label)) continue
+            const box = btn.getBoundingClientRect()
+            if (box.width > 0 && box.height > 0) return true
+          }
+          return false
+        }
+        const approval = (seat === null ? document : seat).querySelector('[class*="_approval"], [class*="_approvalCard"], [class*="Zf6DNq_"]')
+        const promptOpen = (approval !== null && approval.getBoundingClientRect().height > 40) || denyButton()
         /*
          * The ask-your-question card (options with buttons) takes the composer's
          * place the same way an approval does. While it is up the capsule either

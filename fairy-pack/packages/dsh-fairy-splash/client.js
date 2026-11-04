@@ -2683,9 +2683,26 @@ html[data-fairy-skin] .fs-rail-stats::before {
           document.head.appendChild(style)
           const fill = document.createElement('div')
           fill.id = 'fairy-titlebar-fill'
-          fill.style.cssText = 'position:fixed;top:0;right:0;width:190px;height:var(--dsh-windows-titlebar-height,40px);background:#3b4048;z-index:2147482900;pointer-events:none'
+          fill.style.cssText = 'position:fixed;top:0;right:0;left:190px;height:var(--dsh-windows-titlebar-height,40px);background:#3b4048;z-index:2147482900;pointer-events:none'
           document.body.appendChild(fill)
+          /*
+           * Sample the strip's real colour instead of trusting one literal: the
+           * app repaints its frame when another window takes focus, so a fixed
+           * value drifts out of sync the moment the billing window opens. The
+           * caption menu sits inside the strip, so its parent's background is the
+           * colour to copy; transparent means nobody painted it and the skin's
+           * own value is right.
+           */
+          const sample = () => {
+            const menu = document.querySelector('[data-windows-menu]')
+            const host = menu === null ? null : menu.parentElement
+            const bg = host === null ? '' : getComputedStyle(host).backgroundColor
+            fill.style.background = bg === '' || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent' ? '#3b4048' : bg
+          }
+          sample()
+          const timer = window.setInterval(sample, 500)
           return () => {
+            window.clearInterval(timer)
             fill.remove()
             style.remove()
           }

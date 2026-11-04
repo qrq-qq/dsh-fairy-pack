@@ -2675,6 +2675,18 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
             raf = 0
             let open = visibleTall('[class*="_menu"]', 180, 60)
             if (!open) open = visibleTall('[class*="_approval"], [class*="_question"], [class*="_planReview"]', 160, 80)
+            /* A dialog or a tall card that took the composer's place is a card
+               too, whatever its class is called on this build. */
+            if (!open) open = visibleTall('[role="dialog"], [aria-modal="true"]', 200, 120)
+            if (!open) {
+              const seat = document.querySelector('[class*="_composerSeat"]')
+              if (seat !== null) {
+                for (const node of seat.querySelectorAll('[class*="_card"]')) {
+                  const box = node.getBoundingClientRect()
+                  if (box.width > 240 && box.height > 230) { open = true; break }
+                }
+              }
+            }
             if (!open) {
               const stack = document.querySelector('[class*="_composerStack"]')
               if (stack !== null) open = stack.getBoundingClientRect().height > 210

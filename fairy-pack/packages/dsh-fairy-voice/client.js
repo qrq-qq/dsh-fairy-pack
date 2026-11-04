@@ -732,9 +732,16 @@ window.__ModuleLoader__.load({
        * real box inside the seat, then walk up from the editor.
        */
       const CARD = '[class*="GRgSLq_card"], [class*="RlGAzG_card"]'
+      /*
+       * A composer capsule is short. An approval or ask-me card that replaced the
+       * composer is a wide, tall panel, and adopting it as the anchor stretched
+       * the rail to the card's full height beside it. Anything taller than this
+       * is a card, not the input box: refuse it, and the caller hides the rail.
+       */
+      const MAX_CAPSULE_HEIGHT = 220
       const frameOf = (node) => {
         const box = node.getBoundingClientRect()
-        return box.width >= 240 && box.height >= 48 ? box : null
+        return box.width >= 240 && box.height >= 48 && box.height <= MAX_CAPSULE_HEIGHT ? box : null
       }
       const resolveCapsule = (scope) => {
         const root = scope ?? document

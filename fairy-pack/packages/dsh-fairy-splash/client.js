@@ -2612,6 +2612,22 @@ html[data-fairy-skin] .fs-rail-stats::before {
           const body = document.body
           let last = null
           let raf = 0
+          /*
+           * The billing page keeps the stock surface, but its title strip has to
+           * read as the same bar as the main window's. Two pieces: the strip
+           * element itself gets the skin's rail colour, and a fill covers
+           * everything right of the caption menu in case the strip element does
+           * not span the window.
+           */
+          const stripStyle = document.createElement('style')
+          stripStyle.id = 'fairy-billing-strip-style'
+          stripStyle.textContent = 'html[data-fairy-billing] *:has(> [data-windows-menu]){background:#3b4048 !important}html[data-fairy-billing] #fairy-billing-strip{display:block}#fairy-billing-strip{display:none}'
+          document.head.appendChild(stripStyle)
+          const strip = document.createElement('div')
+          strip.id = 'fairy-billing-strip'
+          strip.style.cssText = 'position:fixed;top:0;right:0;left:190px;height:var(--dsh-windows-titlebar-height,40px);background:#3b4048;z-index:2147482900;pointer-events:none'
+          document.body.appendChild(strip)
+
           const billingOpen = () => {
             /* The link may be wrapped in an extra node, so match on the visible
                text of any small element, not only on a leaf span. */
@@ -2654,8 +2670,10 @@ html[data-fairy-skin] .fs-rail-stats::before {
                  colour. Leave the dark palette alone; the stock page has its own
                  white surface anyway. */
               root.removeAttribute('data-fairy-skin')
+              root.setAttribute('data-fairy-billing', '')
             } else {
               root.setAttribute('data-fairy-skin', '')
+              root.removeAttribute('data-fairy-billing')
               if (!body.hasAttribute('data-ds-dark-theme')) body.setAttribute('data-ds-dark-theme', '')
             }
           }
@@ -2668,6 +2686,8 @@ html[data-fairy-skin] .fs-rail-stats::before {
             window.clearInterval(timer)
             window.cancelAnimationFrame(raf)
             observer.disconnect()
+            strip.remove()
+            stripStyle.remove()
           }
         }, 'fairy-splash: stock look on the billing page')
 

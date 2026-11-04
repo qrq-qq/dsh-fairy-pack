@@ -750,6 +750,9 @@ window.__ModuleLoader__.load({
         let best = null
         let bestWidth = 0
         for (const node of root.querySelectorAll('[class*="_card"]')) {
+          /* A card that belongs to a dialog / prompt is not the input box, even
+             if it is small enough to pass the frame test. */
+          if (node.closest('[role="dialog"], [aria-modal="true"], [class*="_approval"], [class*="_question"]') !== null) continue
           const box = frameOf(node)
           if (box === null) continue
           if (box.width > bestWidth) {
@@ -802,6 +805,13 @@ window.__ModuleLoader__.load({
         const askCard = document.querySelector('[class*="_question"], [class*="_questions"]')
         const asking = askCard !== null && askCard.getBoundingClientRect().height > 40
         /*
+         * Same story under a different name: on another build the card may only
+         * be identifiable by its ARIA role. A visible dialog owns the composer,
+         * so the rail steps aside instead of anchoring to something inside it.
+         */
+        const dialog = document.querySelector('[role="dialog"], [aria-modal="true"]')
+        const dialogOpen = dialog !== null && dialog.getBoundingClientRect().height > 80
+        /*
          * The boot film paints its own full-screen layer, but the card lives on
          * <body> at a high z-index now and surfaced over it. The splash marks
          * <html data-fairy-splash-caption> for exactly as long as it is up.
@@ -812,7 +822,7 @@ window.__ModuleLoader__.load({
           /* Force a re-place when the composer comes back. */
           panel.lastKey = ''
         }
-        if (promptOpen || asking || booting) {
+        if (promptOpen || asking || dialogOpen || booting) {
           hide()
           return
         }

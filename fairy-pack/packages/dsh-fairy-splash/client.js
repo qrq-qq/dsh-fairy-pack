@@ -648,15 +648,11 @@ html[data-fairy-skin][data-fairy-menu-open] [class*="_scrollBody"] {
   padding-right: 11px !important;
 }
 /*
- * Tall cards get the opposite treatment. Releasing the clip let an approval
- * card grow past the bottom of the window, so its 拒绝 / 允许 row was off-screen
- * and unreachable — the scroller had nothing to scroll. Cap the card to the
- * space above the composer and let it scroll inside itself instead.
+ * Tall cards: hands off. Capping their height and adding an inner scroller made
+ * the shell's own scroll position (it sits at the newest part) hide the top of
+ * the card — an ask-me card opened mid-sentence. The shell already knows how to
+ * size these; the skin only has to stop clipping the popover of the "+" menu.
  */
-html[data-fairy-skin][data-fairy-card-open] :is([class*="_approval"], [class*="_approvalCard"], [class*="Zf6DNq_"], [class*="_question"], [class*="_questions"], [role="dialog"]) {
-  max-height: calc(100vh - var(--dsh-windows-titlebar-height, 40px) - 150px) !important;
-  overflow-y: auto !important;
-}
 html[data-fairy-skin] :is(.GRgSLq_card, .RlGAzG_card)::before {
   content: "";
   position: absolute;

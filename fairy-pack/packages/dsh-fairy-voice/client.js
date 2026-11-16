@@ -869,6 +869,17 @@ window.__ModuleLoader__.load({
           return
         }
         /*
+         * A side editor takes the right part of the window, and the rail has no
+         * room left: docked to the window it lands on the code, hugging the
+         * capsule it lands on the panel edge. Neither is where a voice control
+         * belongs, so step out while the column is that narrow. With no panel the
+         * gap between the capsule and the window edge is only the padding.
+         */
+        if (window.innerWidth - capsuleBox.right > 220) {
+          hide()
+          return
+        }
+        /*
          * Bottom edges are locked together and the height is captured once:
          * when the composer grows upward for a multi-line draft, the card keeps
          * its size and its bottom, so it does not stretch or drift. Three equal

@@ -47,8 +47,8 @@ window.__ModuleLoader__.load({
       const STAGE_SELECTORS = [
         '[data-dsh-center-col]',
         '[data-slot="main.conversation"]',
-        '.Dc7zOa_root',
-        '.xz4KEq_root',
+        '.V4vHZW_root',
+        '.V4vHZW_root',
       ]
       let frame = 0
       let stage = null
@@ -399,7 +399,7 @@ html[data-fairy-skin] ._2H3hWW_root {
   background: transparent !important;
   color: #dfe9ff !important;
 }
-html[data-fairy-skin] :is([data-slot="main"], [data-slot="main.conversation"], .Dc7zOa_root, .Dc7zOa_body, .Dc7zOa_scrollBody, .Dc7zOa_scroll, .Dc7zOa_column, .xz4KEq_root, .xz4KEq_scroll, .xz4KEq_column) {
+html[data-fairy-skin] :is([data-slot="main"], [data-slot="main.conversation"], .V4vHZW_root, .V4vHZW_frame, .V4vHZW_scroll, .V4vHZW_scroll, .V4vHZW_column, .V4vHZW_root, .V4vHZW_scroll, .V4vHZW_column) {
   background: transparent !important;
 }
 /*
@@ -410,8 +410,8 @@ html[data-fairy-skin] :is([data-slot="main"], [data-slot="main.conversation"], .
 :root[data-fairy-skin] {
   --fairy-chat-art: url("/fairy-splash/v1/chat-bg.jpg");
 }
-html[data-fairy-skin] body:has(.xz4KEq_root) :is(.Dc7zOa_root, [data-slot="main.conversation"]),
-html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) :is(.Dc7zOa_root, [data-slot="main.conversation"]) {
+html[data-fairy-skin] body:has(.V4vHZW_root) :is(.V4vHZW_root, [data-slot="main.conversation"]),
+html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) :is(.V4vHZW_root, [data-slot="main.conversation"]) {
   background-image:
     linear-gradient(180deg, rgba(5, 7, 14, .88) 0%, rgba(5, 7, 14, .64) 32%, rgba(5, 7, 14, .82) 100%),
     var(--fairy-chat-art) !important;
@@ -423,13 +423,13 @@ html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) :is(.Dc7zOa_root
 /* The new-conversation screen carries the same picture; its headline sits
    lower and larger, so the scrim is a touch heavier there and the frame is
    biased toward the face rather than the top edge. */
-html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) :is(.Dc7zOa_root, [data-slot="main.conversation"]) {
+html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) :is(.V4vHZW_root, [data-slot="main.conversation"]) {
   background-image:
     linear-gradient(180deg, rgba(5, 7, 14, .92) 0%, rgba(5, 7, 14, .70) 38%, rgba(5, 7, 14, .90) 100%),
     var(--fairy-chat-art) !important;
   background-position: 50% 22% !important;
 }
-html[data-fairy-skin] .Dc7zOa_header {
+html[data-fairy-skin] .an3WzG_header {
   background: transparent !important;
   border-bottom: 1px solid rgba(91, 124, 220, .13) !important;
   backdrop-filter: none !important;
@@ -473,7 +473,7 @@ html[data-fairy-skin] .cJsG2q_contextRow {
   opacity: .85;
 }
 html[data-fairy-skin] .cJsG2q_contextRow svg { color: #a8c4ff !important; }
-html[data-fairy-skin] .xz4KEq_column {
+html[data-fairy-skin] .V4vHZW_column {
   color: #eaf2ff !important;
   font-weight: 550;
   /* A hair of soft edge: rounds the terminals without smearing the glyphs. */
@@ -481,8 +481,8 @@ html[data-fairy-skin] .xz4KEq_column {
   letter-spacing: .008em;
 }
 html[data-fairy-skin] :is(.cJsG2q_bubble, .RlGAzG_input, ._3GBCTG_thinkBody) { font-weight: 500; }
-html[data-fairy-skin] :is(.xz4KEq_column h1, .xz4KEq_column h2, .xz4KEq_column h3, .xz4KEq_column strong, .xz4KEq_column b) { font-weight: 700; }
-html[data-fairy-skin] .xz4KEq_column :is(p, li) { color: #eaf2ff !important; }
+html[data-fairy-skin] :is(.V4vHZW_column h1, .V4vHZW_column h2, .V4vHZW_column h3, .V4vHZW_column strong, .V4vHZW_column b) { font-weight: 700; }
+html[data-fairy-skin] .V4vHZW_column :is(p, li) { color: #eaf2ff !important; }
 html[data-fairy-skin] ._3GBCTG_title,
 html[data-fairy-skin] ._3GBCTG_summaryText { color: #a9c1e8 !important; }
 /*
@@ -492,7 +492,7 @@ html[data-fairy-skin] ._3GBCTG_summaryText { color: #a9c1e8 !important; }
  * a single dark hairline rather than a long fade, so the boundary reads as a
  * deliberate frame instead of a gradient smudge.
  */
-html[data-fairy-skin] .Dc7zOa_composerSeat {
+html[data-fairy-skin] .an3WzG_composerSeat {
   background: linear-gradient(180deg, #4a4f57 0%, #3b4048 100%) !important;
   box-shadow: none !important;
 }
@@ -521,11 +521,11 @@ html[data-fairy-skin] [class*="_composerStack"] {
  * fills exactly the space the chat screen gives it, which is the parity asked
  * for. Forcing width here is what broke the layout earlier.
  */
-html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_composerSeat [class*="_card"] {
+html[data-fairy-skin] :is(.V4vHZW_root[data-phase="hero"], .V4vHZW_frame[data-content-phase="hero"]) .an3WzG_composerSeat [class*="_card"] {
   max-width: none !important;
 }
 /* Any trailing spacer inside the seat loses its own margins too. */
-html[data-fairy-skin] .Dc7zOa_composerSeat > :last-child {
+html[data-fairy-skin] .an3WzG_composerSeat > :last-child {
   margin-top: 2px !important;
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
@@ -536,10 +536,10 @@ html[data-fairy-skin] .Dc7zOa_composerSeat > :last-child {
  * at the bottom of the column instead — the seat keeps its own 32px hero
  * padding — and keep the hero copy clear of the input.
  */
-html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_scrollBody {
+html[data-fairy-skin] :is(.V4vHZW_root[data-phase="hero"], .V4vHZW_frame[data-content-phase="hero"]) .V4vHZW_scroll {
   justify-content: flex-start;
 }
-html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_composerSeat {
+html[data-fairy-skin] :is(.V4vHZW_root[data-phase="hero"], .V4vHZW_frame[data-content-phase="hero"]) .an3WzG_composerSeat {
   margin-top: auto;
 }
 /* Hero composer width is left to the app: forcing 100% on its wrapper crushed
@@ -718,7 +718,7 @@ html[data-fairy-skin] ::-webkit-scrollbar-thumb:active {
 html[data-fairy-skin] ::-webkit-scrollbar-corner { background: transparent; }
 /* Reserve the gutter only where the conversation list lives, so the column does
    not jump a few pixels the moment a long answer makes the bar appear. */
-html[data-fairy-skin] body:has(.xz4KEq_root) :is(.Dc7zOa_scroll, .xz4KEq_scroll) {
+html[data-fairy-skin] body:has(.V4vHZW_root) :is(.V4vHZW_scroll, .V4vHZW_scroll) {
   scrollbar-gutter: stable;
 }
 
@@ -758,10 +758,10 @@ html[data-fairy-skin] ._2WTFBq_panel {
     inset 0 0 0 2px var(--fairy-line),
     inset 0 0 0 4px rgba(0, 0, 0, .10);
 }
-html[data-fairy-skin] .Dc7zOa_header {
+html[data-fairy-skin] .an3WzG_header {
   border-bottom: none !important;
 }
-html[data-fairy-skin] .Dc7zOa_tab {
+html[data-fairy-skin] .an3WzG_tab {
   border-radius: 12px !important;
 }
 html[data-fairy-skin] .RlGAzG_card {
@@ -928,7 +928,7 @@ html[data-fairy-skin] ._2H3hWW_brandName::after {
   white-space: nowrap;
 }
 
-html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) .Dc7zOa_headerUtilities { opacity: 0; pointer-events: none; }
+html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) .an3WzG_headerUtilities { opacity: 0; pointer-events: none; }
 
 /* ---- HOLLOW DEEP DIVE SYSTEM hero, only in the no-session state ---- */
 .fs-hero {
@@ -945,21 +945,21 @@ html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) .Dc7zOa_headerUt
   overflow: hidden;
   pointer-events: none;
 }
-html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) .fs-hero { display: block; }
+html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) .fs-hero { display: block; }
 /* A real chat keeps the same large core as the new-conversation screen;
    only the caption copy is dropped. The chat viewport is shortened below the
    core instead of replacing it with a second, smaller icon. */
-html[data-fairy-skin] body:has(.xz4KEq_root) .fs-hero {
+html[data-fairy-skin] body:has(.V4vHZW_root) .fs-hero {
   display: block !important;
 }
-html[data-fairy-skin] body:has(.xz4KEq_root) .fs-hero-copy {
+html[data-fairy-skin] body:has(.V4vHZW_root) .fs-hero-copy {
   display: none !important;
 }
 /* A live chat gets a compact core that sits below the session header rather
    than the poster-sized one used on the new-conversation screen. The size is
    proportional to the window, so maximizing or restoring the window scales the
    icon with the console instead of leaving a fixed slab in the middle. */
-html[data-fairy-skin] body:has(.xz4KEq_root) {
+html[data-fairy-skin] body:has(.V4vHZW_root) {
   --fairy-orb-size: clamp(150px, min(19vw, 25vh), 320px);
   /* The header (title row + 对话/轨迹 tabs) is 76px tall by default; start the
      core just under that rule instead of inside it. */
@@ -973,7 +973,7 @@ html[data-fairy-skin] body:has(.xz4KEq_root) {
    scrolled content: the chat engine measures that content and re-anchors the
    view when it is pushed from the inside. With the port itself shortened, the
    engine sees an ordinary, smaller viewport. */
-html[data-fairy-skin] body:has(.xz4KEq_root) .Dc7zOa_scrollBody {
+html[data-fairy-skin] body:has(.V4vHZW_root) .V4vHZW_scroll {
   margin-top: var(--fairy-chat-top);
 }
 /*
@@ -982,7 +982,7 @@ html[data-fairy-skin] body:has(.xz4KEq_root) .Dc7zOa_scrollBody {
  * the picture runs clean from top to bottom and the core simply floats above
  * it. Restore the old gradient if the flat console ever returns.
  */
-html[data-fairy-skin] body:has(.xz4KEq_root) .Dc7zOa_body::after {
+html[data-fairy-skin] body:has(.V4vHZW_root) .V4vHZW_frame::after {
   content: none;
   display: none;
 }
@@ -1209,7 +1209,7 @@ html[data-fairy-skin] body:has([data-phase="hero"]) [class*="_headline"]:has([cl
   pointer-events: none;
   filter: drop-shadow(0 0 8px rgba(88, 126, 255, .55));
 }
-html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
+html[data-fairy-skin] body:has(.V4vHZW_root) .fs-chat-orb {
   display: block;
 }
 .fs-chat-orb .fs-orb { width: 100%; height: 100%; }
@@ -1745,7 +1745,7 @@ html[data-fairy-skin][data-fairy-resizing] :is(
 html[data-fairy-skin][data-fairy-resizing] :is(.fs-hero-orb, .fs-chat-orb, .fs-header-orb) {
   filter: none !important;
 }
-html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
+html[data-fairy-skin][data-fairy-resizing] .V4vHZW_root {
   transition: none !important;
 }
 
@@ -2678,7 +2678,7 @@ const billingOpen = () => {
          * the broader selectors, and a build that does not still gets a surface.
          */
         effect(() => {
-          const KNOWN = '[class*="GRgSLq_card"], [class*="RlGAzG_card"], [class*="BynINW_sidebarCol"], [class*="BynINW_frame"], [class*="Dc7zOa_root"], [class*="xz4KEq_root"]'
+          const KNOWN = '[class*="GRgSLq_card"], [class*="RlGAzG_card"], [class*="BynINW_sidebarCol"], [class*="BynINW_frame"], [class*="V4vHZW_root"], [class*="V4vHZW_root"]'
           const LEGACY_CSS = `
 html[data-fairy-skin-legacy] [class*="_sidebarCol"] {
   background:

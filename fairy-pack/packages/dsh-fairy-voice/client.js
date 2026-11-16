@@ -739,9 +739,17 @@ window.__ModuleLoader__.load({
        * is a card, not the input box: refuse it, and the caller hides the rail.
        */
       const MAX_CAPSULE_HEIGHT = 220
+      /*
+       * 240px was too strict: opening the side editor narrows the conversation
+       * column and the composer capsule drops below it, so the rail vanished
+       * exactly when the layout got tight. The rail itself only needs ~124px and
+       * its left edge is clamped to the window, so it can stay on a narrower
+       * capsule; 150 still rejects slivers and zero-width ghosts.
+       */
+      const MIN_CAPSULE_WIDTH = 150
       const frameOf = (node) => {
         const box = node.getBoundingClientRect()
-        return box.width >= 240 && box.height >= 48 && box.height <= MAX_CAPSULE_HEIGHT ? box : null
+        return box.width >= MIN_CAPSULE_WIDTH && box.height >= 48 && box.height <= MAX_CAPSULE_HEIGHT ? box : null
       }
       const resolveCapsule = (scope) => {
         const root = scope ?? document
@@ -875,7 +883,14 @@ window.__ModuleLoader__.load({
          */
         const height = Math.max(48, Math.round(capsuleBox.height))
         const top = Math.round(capsuleBox.top)
-        const left = Math.max(0, Math.min(Math.round(capsuleBox.right + 10), window.innerWidth - 134))
+        /*
+         * With the side editor open the column is narrow, and hugging a narrow
+         * capsule would park the rail on top of the editor's edge. Below 260px
+         * the rail docks to the window instead, which is where it already sat
+         * before the panel opened — it should not jump into the middle.
+         */
+        const edge = window.innerWidth - 134
+        const left = capsuleBox.width < 260 ? Math.max(0, edge) : Math.max(0, Math.min(Math.round(capsuleBox.right + 10), edge))
         const key = top + ':' + left + ':' + height
         if (panel.lastKey === key && panel.host.style.visibility === 'visible') return
         panel.lastKey = key

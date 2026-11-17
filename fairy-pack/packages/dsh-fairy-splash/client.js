@@ -47,8 +47,8 @@ window.__ModuleLoader__.load({
       const STAGE_SELECTORS = [
         '[data-dsh-center-col]',
         '[data-slot="main.conversation"]',
-        '.V4vHZW_root',
-        '.V4vHZW_root',
+        '.Dc7zOa_root',
+        '.xz4KEq_root',
       ]
       let frame = 0
       let stage = null
@@ -387,7 +387,7 @@ html[data-fairy-skin] .BynINW_frame:before {
   background: #3b4048 !important;
   border-bottom: 1px solid rgba(0, 0, 0, .55) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol {
+html[data-fairy-skin] [class*="sidebarCol"] {
   background:
     linear-gradient(rgba(92, 128, 255, .034) 1px, transparent 1px),
     linear-gradient(90deg, rgba(92, 128, 255, .034) 1px, transparent 1px),
@@ -399,7 +399,7 @@ html[data-fairy-skin] ._2H3hWW_root {
   background: transparent !important;
   color: #dfe9ff !important;
 }
-html[data-fairy-skin] :is([data-slot="main"], [data-slot="main.conversation"], .V4vHZW_root, .V4vHZW_frame, .V4vHZW_scroll, .V4vHZW_scroll, .V4vHZW_column, .V4vHZW_root, .V4vHZW_scroll, .V4vHZW_column) {
+html[data-fairy-skin] :is([data-slot="main"], [data-slot="main.conversation"], .Dc7zOa_root, .Dc7zOa_body, .Dc7zOa_scrollBody, .Dc7zOa_scroll, .Dc7zOa_column, .xz4KEq_root, .xz4KEq_scroll, .xz4KEq_column) {
   background: transparent !important;
 }
 /*
@@ -410,8 +410,8 @@ html[data-fairy-skin] :is([data-slot="main"], [data-slot="main.conversation"], .
 :root[data-fairy-skin] {
   --fairy-chat-art: url("/fairy-splash/v1/chat-bg.jpg");
 }
-html[data-fairy-skin] body:has(.V4vHZW_root) :is(.V4vHZW_root, [data-slot="main.conversation"]),
-html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) :is(.V4vHZW_root, [data-slot="main.conversation"]) {
+html[data-fairy-skin] body:has(.xz4KEq_root) :is(.Dc7zOa_root, [data-slot="main.conversation"]),
+html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) :is(.Dc7zOa_root, [data-slot="main.conversation"]) {
   background-image:
     linear-gradient(180deg, rgba(5, 7, 14, .88) 0%, rgba(5, 7, 14, .64) 32%, rgba(5, 7, 14, .82) 100%),
     var(--fairy-chat-art) !important;
@@ -423,13 +423,13 @@ html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) :is(.V4vHZW_root
 /* The new-conversation screen carries the same picture; its headline sits
    lower and larger, so the scrim is a touch heavier there and the frame is
    biased toward the face rather than the top edge. */
-html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) :is(.V4vHZW_root, [data-slot="main.conversation"]) {
+html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) :is(.Dc7zOa_root, [data-slot="main.conversation"]) {
   background-image:
     linear-gradient(180deg, rgba(5, 7, 14, .92) 0%, rgba(5, 7, 14, .70) 38%, rgba(5, 7, 14, .90) 100%),
     var(--fairy-chat-art) !important;
   background-position: 50% 22% !important;
 }
-html[data-fairy-skin] .an3WzG_header {
+html[data-fairy-skin] .Dc7zOa_header {
   background: transparent !important;
   border-bottom: 1px solid rgba(91, 124, 220, .13) !important;
   backdrop-filter: none !important;
@@ -473,7 +473,7 @@ html[data-fairy-skin] .cJsG2q_contextRow {
   opacity: .85;
 }
 html[data-fairy-skin] .cJsG2q_contextRow svg { color: #a8c4ff !important; }
-html[data-fairy-skin] .V4vHZW_column {
+html[data-fairy-skin] .xz4KEq_column {
   color: #eaf2ff !important;
   font-weight: 550;
   /* A hair of soft edge: rounds the terminals without smearing the glyphs. */
@@ -481,8 +481,8 @@ html[data-fairy-skin] .V4vHZW_column {
   letter-spacing: .008em;
 }
 html[data-fairy-skin] :is(.cJsG2q_bubble, .RlGAzG_input, ._3GBCTG_thinkBody) { font-weight: 500; }
-html[data-fairy-skin] :is(.V4vHZW_column h1, .V4vHZW_column h2, .V4vHZW_column h3, .V4vHZW_column strong, .V4vHZW_column b) { font-weight: 700; }
-html[data-fairy-skin] .V4vHZW_column :is(p, li) { color: #eaf2ff !important; }
+html[data-fairy-skin] :is(.xz4KEq_column h1, .xz4KEq_column h2, .xz4KEq_column h3, .xz4KEq_column strong, .xz4KEq_column b) { font-weight: 700; }
+html[data-fairy-skin] .xz4KEq_column :is(p, li) { color: #eaf2ff !important; }
 html[data-fairy-skin] ._3GBCTG_title,
 html[data-fairy-skin] ._3GBCTG_summaryText { color: #a9c1e8 !important; }
 /*
@@ -492,7 +492,7 @@ html[data-fairy-skin] ._3GBCTG_summaryText { color: #a9c1e8 !important; }
  * a single dark hairline rather than a long fade, so the boundary reads as a
  * deliberate frame instead of a gradient smudge.
  */
-html[data-fairy-skin] .an3WzG_composerSeat {
+html[data-fairy-skin] .Dc7zOa_composerSeat {
   background: linear-gradient(180deg, #4a4f57 0%, #3b4048 100%) !important;
   box-shadow: none !important;
 }
@@ -521,11 +521,11 @@ html[data-fairy-skin] [class*="_composerStack"] {
  * fills exactly the space the chat screen gives it, which is the parity asked
  * for. Forcing width here is what broke the layout earlier.
  */
-html[data-fairy-skin] :is(.V4vHZW_root[data-phase="hero"], .V4vHZW_frame[data-content-phase="hero"]) .an3WzG_composerSeat [class*="_card"] {
+html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_composerSeat [class*="_card"] {
   max-width: none !important;
 }
 /* Any trailing spacer inside the seat loses its own margins too. */
-html[data-fairy-skin] .an3WzG_composerSeat > :last-child {
+html[data-fairy-skin] .Dc7zOa_composerSeat > :last-child {
   margin-top: 2px !important;
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
@@ -536,10 +536,10 @@ html[data-fairy-skin] .an3WzG_composerSeat > :last-child {
  * at the bottom of the column instead — the seat keeps its own 32px hero
  * padding — and keep the hero copy clear of the input.
  */
-html[data-fairy-skin] :is(.V4vHZW_root[data-phase="hero"], .V4vHZW_frame[data-content-phase="hero"]) .V4vHZW_scroll {
+html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_scrollBody {
   justify-content: flex-start;
 }
-html[data-fairy-skin] :is(.V4vHZW_root[data-phase="hero"], .V4vHZW_frame[data-content-phase="hero"]) .an3WzG_composerSeat {
+html[data-fairy-skin] :is(.Dc7zOa_root[data-phase="hero"], .Dc7zOa_body[data-content-phase="hero"]) .Dc7zOa_composerSeat {
   margin-top: auto;
 }
 /* Hero composer width is left to the app: forcing 100% on its wrapper crushed
@@ -551,7 +551,7 @@ html[data-fairy-skin] :is(.V4vHZW_root[data-phase="hero"], .V4vHZW_frame[data-co
  * from the seam, and each edge facing the conversation carries a short
  * gradient so the surface turns away instead of stopping dead.
  */
-html[data-fairy-skin] .BynINW_sidebarCol {
+html[data-fairy-skin] [class*="sidebarCol"] {
   --fairy-frame-radius: 16px;
   position: relative;
   border-radius: var(--fairy-frame-radius) !important;
@@ -566,7 +566,7 @@ html[data-fairy-skin] .BynINW_sidebarCol {
 /* The rail is flush with the window edge, so its corners go back to square:
    rounding them only ate into the frame and left slivers of backdrop showing
    at the top-left and bottom-left. The composer keeps its radius. */
-html[data-fairy-skin] .BynINW_sidebarCol {
+html[data-fairy-skin] [class*="sidebarCol"] {
   border-radius: 0 !important;
 }
 /* The composer's top seam: the picture hands over to the rail through a short
@@ -645,7 +645,12 @@ html[data-fairy-skin][data-fairy-menu-open] [class*="_composerSeat"] {
    the overflow, so nothing changes width while the menu is open. */
 html[data-fairy-skin][data-fairy-menu-open] [class*="_scrollBody"] {
   overflow: visible !important;
-  padding-right: 11px !important;
+  /*
+   * No padding compensation here. It was there to keep the column from widening
+   * when the scrollbar gutter disappeared, but on the current shell the padding
+   * itself re-anchored the scroll position: opening the model menu pushed the
+   * whole conversation up by a dozen pixels.
+   */
 }
 /*
  * Tall cards: hands off. Capping their height and adding an inner scroller made
@@ -718,7 +723,7 @@ html[data-fairy-skin] ::-webkit-scrollbar-thumb:active {
 html[data-fairy-skin] ::-webkit-scrollbar-corner { background: transparent; }
 /* Reserve the gutter only where the conversation list lives, so the column does
    not jump a few pixels the moment a long answer makes the bar appear. */
-html[data-fairy-skin] body:has(.V4vHZW_root) :is(.V4vHZW_scroll, .V4vHZW_scroll) {
+html[data-fairy-skin] body:has(.xz4KEq_root) :is(.Dc7zOa_scroll, .xz4KEq_scroll) {
   scrollbar-gutter: stable;
 }
 
@@ -734,7 +739,7 @@ html[data-fairy-skin] :is(._2H3hWW_newSession, ._9lTDKa_sessionRow, ._2H3hWW_pan
 
 /* Heavy rounded region outlines from the reference. The sidebar brand cell
    and the conversation trajectory stay unoutlined. */
-html[data-fairy-skin] .BynINW_sidebarCol {
+html[data-fairy-skin] [class*="sidebarCol"] {
   border-right-width: 2px !important;
   border-right-color: var(--fairy-line) !important;
 }
@@ -758,10 +763,10 @@ html[data-fairy-skin] ._2WTFBq_panel {
     inset 0 0 0 2px var(--fairy-line),
     inset 0 0 0 4px rgba(0, 0, 0, .10);
 }
-html[data-fairy-skin] .an3WzG_header {
+html[data-fairy-skin] .Dc7zOa_header {
   border-bottom: none !important;
 }
-html[data-fairy-skin] .an3WzG_tab {
+html[data-fairy-skin] .Dc7zOa_tab {
   border-radius: 12px !important;
 }
 html[data-fairy-skin] .RlGAzG_card {
@@ -928,7 +933,7 @@ html[data-fairy-skin] ._2H3hWW_brandName::after {
   white-space: nowrap;
 }
 
-html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) .an3WzG_headerUtilities { opacity: 0; pointer-events: none; }
+html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) .Dc7zOa_headerUtilities { opacity: 0; pointer-events: none; }
 
 /* ---- HOLLOW DEEP DIVE SYSTEM hero, only in the no-session state ---- */
 .fs-hero {
@@ -945,21 +950,21 @@ html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) .an3WzG_headerUt
   overflow: hidden;
   pointer-events: none;
 }
-html[data-fairy-skin] body:has(.V4vHZW_root[data-phase="hero"]) .fs-hero { display: block; }
+html[data-fairy-skin] body:has(.Dc7zOa_root[data-phase="hero"]) .fs-hero { display: block; }
 /* A real chat keeps the same large core as the new-conversation screen;
    only the caption copy is dropped. The chat viewport is shortened below the
    core instead of replacing it with a second, smaller icon. */
-html[data-fairy-skin] body:has(.V4vHZW_root) .fs-hero {
+html[data-fairy-skin] body:has(.xz4KEq_root) .fs-hero {
   display: block !important;
 }
-html[data-fairy-skin] body:has(.V4vHZW_root) .fs-hero-copy {
+html[data-fairy-skin] body:has(.xz4KEq_root) .fs-hero-copy {
   display: none !important;
 }
 /* A live chat gets a compact core that sits below the session header rather
    than the poster-sized one used on the new-conversation screen. The size is
    proportional to the window, so maximizing or restoring the window scales the
    icon with the console instead of leaving a fixed slab in the middle. */
-html[data-fairy-skin] body:has(.V4vHZW_root) {
+html[data-fairy-skin] body:has(.xz4KEq_root) {
   --fairy-orb-size: clamp(150px, min(19vw, 25vh), 320px);
   /* The header (title row + 对话/轨迹 tabs) is 76px tall by default; start the
      core just under that rule instead of inside it. */
@@ -973,7 +978,7 @@ html[data-fairy-skin] body:has(.V4vHZW_root) {
    scrolled content: the chat engine measures that content and re-anchors the
    view when it is pushed from the inside. With the port itself shortened, the
    engine sees an ordinary, smaller viewport. */
-html[data-fairy-skin] body:has(.V4vHZW_root) .V4vHZW_scroll {
+html[data-fairy-skin] body:has(.xz4KEq_root) .Dc7zOa_scrollBody {
   margin-top: var(--fairy-chat-top);
 }
 /*
@@ -982,7 +987,7 @@ html[data-fairy-skin] body:has(.V4vHZW_root) .V4vHZW_scroll {
  * the picture runs clean from top to bottom and the core simply floats above
  * it. Restore the old gradient if the flat console ever returns.
  */
-html[data-fairy-skin] body:has(.V4vHZW_root) .V4vHZW_frame::after {
+html[data-fairy-skin] body:has(.xz4KEq_root) .Dc7zOa_body::after {
   content: none;
   display: none;
 }
@@ -1209,7 +1214,7 @@ html[data-fairy-skin] body:has([data-phase="hero"]) [class*="_headline"]:has([cl
   pointer-events: none;
   filter: drop-shadow(0 0 8px rgba(88, 126, 255, .55));
 }
-html[data-fairy-skin] body:has(.V4vHZW_root) .fs-chat-orb {
+html[data-fairy-skin] body:has(.xz4KEq_root) .fs-chat-orb {
   display: block;
 }
 .fs-chat-orb .fs-orb { width: 100%; height: 100%; }
@@ -1308,7 +1313,7 @@ html[data-fairy-skin] body:has(.V4vHZW_root) .fs-chat-orb {
     animation: none !important;
   }
   /* The rail still keeps its soft light, it just stops moving. */
-  html[data-fairy-skin] .BynINW_sidebarCol :is(
+  html[data-fairy-skin] [class*="sidebarCol"] :is(
     .wtg9ga_newSession, ._2H3hWW_newSession,
     .wtg9ga_panelList, ._2H3hWW_panelList,
     .GAkraW_listArea, ._9lTDKa_listArea
@@ -1500,7 +1505,7 @@ html[data-fairy-skin] :is(.wnFoaW_sessionRow, ._9lTDKa_sessionRow):hover {
    light; every glass card keeps the console's original dark treatment, so the
    frosted look is unchanged — the rail just sits on a pale ground.
    ===================================================================== */
-html[data-fairy-skin] .BynINW_sidebarCol {
+html[data-fairy-skin] [class*="sidebarCol"] {
   --dsw-specific-sidebar-fill: #444952;
   --dsw-alias-bg-layer-1: #4b5058;
   --dsw-alias-bg-layer-2: #3f444c;
@@ -1515,10 +1520,10 @@ html[data-fairy-skin] .BynINW_sidebarCol {
   border-right-color: rgba(0, 0, 0, .55) !important;
   color: #1a2438;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(._2H3hWW_brandName, .wtg9ga_brandName)::before {
+html[data-fairy-skin] [class*="sidebarCol"] :is(._2H3hWW_brandName, .wtg9ga_brandName)::before {
   color: #f2f7ff !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(._2H3hWW_brandName, .wtg9ga_brandName)::after {
+html[data-fairy-skin] [class*="sidebarCol"] :is(._2H3hWW_brandName, .wtg9ga_brandName)::after {
   color: rgba(226, 236, 250, .55) !important;
 }
 /*
@@ -1529,28 +1534,28 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(._2H3hWW_brandName, .wtg9ga_brandNa
  * a generic navy slab. Alphas sit around .5–.7: raise toward .80 for a heavier
  * pane, drop toward .45 for a thinner one.
  */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .26) 0%, rgba(255, 255, 255, .06) 15%, rgba(255, 255, 255, 0) 36%),
     linear-gradient(104deg, rgba(255, 255, 255, 0) 16%, rgba(226, 238, 255, .14) 24%, rgba(255, 255, 255, 0) 34%),
     linear-gradient(160deg, rgba(57, 120, 237, .46) 0%, rgba(25, 52, 153, .56) 52%, rgba(9, 18, 52, .68) 100%) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, .09) 16%, rgba(255, 255, 255, 0) 38%),
     linear-gradient(104deg, rgba(255, 255, 255, 0) 14%, rgba(238, 246, 255, .20) 24%, rgba(255, 255, 255, 0) 36%),
     linear-gradient(160deg, rgba(74, 138, 250, .54) 0%, rgba(32, 64, 178, .64) 52%, rgba(11, 22, 60, .74) 100%) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .03) 16%, rgba(255, 255, 255, 0) 40%),
     linear-gradient(146deg, rgba(168, 198, 255, .10) 0%, rgba(96, 134, 226, .03) 32%, rgba(255, 255, 255, 0) 56%),
     linear-gradient(180deg, rgba(48, 104, 224, .42) 0%, rgba(24, 50, 148, .52) 54%, rgba(8, 16, 46, .64) 100%) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea) {
   background:
     var(--fairy-glass-grain) 0 0 / 46px 46px repeat,
     linear-gradient(180deg, rgba(255, 255, 255, .13) 0%, rgba(255, 255, 255, .03) 13%, rgba(255, 255, 255, 0) 32%),
@@ -1560,49 +1565,49 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea
 /* The list's scroll fade paints var(--dsw-specific-sidebar-fill), which is now
    pale — over the dark glass it drew a light band at the bottom. Fade it into
    the glass tone instead. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_fade, ._9lTDKa_fade) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_fade, ._9lTDKa_fade) {
   display: none !important;
 }
 /* Against the pale rail the pane's bottom rim would read as a white shelf;
    keep the light rim on top only and let the base fall away dark. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea)::after {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea)::after {
   border: 1px solid rgba(112, 152, 248, .24) !important;
   border-top-color: rgba(200, 218, 255, .40) !important;
   box-shadow: none !important;
 }
 /* The console's deep inner bottom shadow reads as a black band on a pale rail.
    Replace the three card shadows with a single soft drop. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .34),
     inset 0 -1px 0 rgba(255, 255, 255, .05),
     0 10px 22px rgba(0, 0, 0, .20) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_panelList, ._2H3hWW_panelList) {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .22),
     0 8px 18px rgba(0, 0, 0, .18) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea) {
   /* No drop shadow under the pane: the rail below stays clean. */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .20) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession):hover {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .42),
     inset 0 -1px 0 rgba(255, 255, 255, .06),
     0 14px 28px rgba(0, 0, 0, .22) !important;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession):active {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession):active {
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, .28),
     inset 0 1px 0 rgba(255, 255, 255, .16),
     0 6px 14px rgba(0, 0, 0, .18) !important;
 }
 /* The dark glass cards re-declare the console's ink for their own subtree. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession),
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList),
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession),
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_panelList, ._2H3hWW_panelList),
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea) {
   --dsw-alias-label-primary: #e8f0ff;
   --dsw-alias-label-secondary: #b6c8e8;
   --dsw-alias-label-tertiary: #8ea4c6;
@@ -1619,12 +1624,12 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea
  * cards are told to take the full remaining width instead of their own.
  * Tune --fairy-rail-inset: 6px reads tighter, 14px roomier.
  */
-html[data-fairy-skin] .BynINW_sidebarCol {
+html[data-fairy-skin] [class*="sidebarCol"] {
   --fairy-rail-inset: 10px;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession),
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList),
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession),
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_panelList, ._2H3hWW_panelList),
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea) {
   margin-left: var(--fairy-rail-inset) !important;
   margin-right: var(--fairy-rail-inset) !important;
   width: auto !important;
@@ -1635,7 +1640,7 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea
 }
 /* The new-session card is a call to action, so its label rides in the middle;
    the panel and session panes keep their rows flush left. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession) {
   justify-content: center !important;
   text-align: center !important;
 }
@@ -1653,17 +1658,17 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSes
    corners. Tune the read with opacity (density), filter blur (softness) and
    animation-duration (speed) — the four surfaces run out of phase on purpose.
    ===================================================================== */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession),
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList),
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea),
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession),
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_panelList, ._2H3hWW_panelList),
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea),
 html[data-fairy-skin] .fs-rail-stats {
   position: relative !important;
   overflow: hidden !important;
   isolation: isolate;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession)::before,
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList)::before,
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea)::before,
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession)::before,
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_panelList, ._2H3hWW_panelList)::before,
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea)::before,
 html[data-fairy-skin] .fs-rail-stats::before {
   content: "";
   position: absolute;
@@ -1684,14 +1689,14 @@ html[data-fairy-skin] .fs-rail-stats::before {
   animation: fs-liquid-drift 26s ease-in-out infinite alternate;
 }
 /* Call to action: the smallest surface, so it runs brightest and quickest. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_newSession, ._2H3hWW_newSession)::before {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_newSession, ._2H3hWW_newSession)::before {
   opacity: .62;
   filter: blur(20px) saturate(135%);
   animation-duration: 24s;
   animation-delay: -5s;
 }
 /* Panel card: mid-size, a touch calmer. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelList)::before {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.wtg9ga_panelList, ._2H3hWW_panelList)::before {
   opacity: .46;
   filter: blur(28px) saturate(125%);
   animation-duration: 30s;
@@ -1699,7 +1704,7 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(.wtg9ga_panelList, ._2H3hWW_panelLi
 }
 /* Session pane: the long one. Slowest drift keeps a tall sheet from looking
    like a rolling wallpaper. */
-html[data-fairy-skin] .BynINW_sidebarCol :is(.GAkraW_listArea, ._9lTDKa_listArea)::before {
+html[data-fairy-skin] [class*="sidebarCol"] :is(.GAkraW_listArea, ._9lTDKa_listArea)::before {
   opacity: .40;
   filter: blur(34px) saturate(120%);
   animation-duration: 38s;
@@ -1745,7 +1750,7 @@ html[data-fairy-skin][data-fairy-resizing] :is(
 html[data-fairy-skin][data-fairy-resizing] :is(.fs-hero-orb, .fs-chat-orb, .fs-header-orb) {
   filter: none !important;
 }
-html[data-fairy-skin][data-fairy-resizing] .V4vHZW_root {
+html[data-fairy-skin][data-fairy-resizing] .Dc7zOa_root {
   transition: none !important;
 }
 
@@ -1765,7 +1770,7 @@ html[data-fairy-skin] {
   --fairy-liquid-3: rgba(25, 52, 153, .32);
   --fairy-liquid-4: rgba(180, 196, 238, .18);
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(
+html[data-fairy-skin] [class*="sidebarCol"] :is(
   .wtg9ga_newSession, ._2H3hWW_newSession,
   .wtg9ga_panelList, ._2H3hWW_panelList,
   .GAkraW_listArea, ._9lTDKa_listArea
@@ -1774,7 +1779,7 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(
   isolation: isolate;
   overflow: hidden;
 }
-html[data-fairy-skin] .BynINW_sidebarCol :is(
+html[data-fairy-skin] [class*="sidebarCol"] :is(
   .wtg9ga_newSession, ._2H3hWW_newSession,
   .wtg9ga_panelList, ._2H3hWW_panelList,
   .GAkraW_listArea, ._9lTDKa_listArea
@@ -1800,7 +1805,7 @@ html[data-fairy-skin] .BynINW_sidebarCol :is(
 }
 /* Quiet while the rail is being resized, and for anyone who asked the system
    for less motion. */
-html[data-fairy-skin][data-fairy-resizing] .BynINW_sidebarCol :is(
+html[data-fairy-skin][data-fairy-resizing] [class*="sidebarCol"] :is(
   .wtg9ga_newSession, ._2H3hWW_newSession,
   .wtg9ga_panelList, ._2H3hWW_panelList,
   .GAkraW_listArea, ._9lTDKa_listArea
@@ -1808,13 +1813,149 @@ html[data-fairy-skin][data-fairy-resizing] .BynINW_sidebarCol :is(
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-fairy-skin] .BynINW_sidebarCol :is(
+  html[data-fairy-skin] [class*="sidebarCol"] :is(
     .wtg9ga_newSession, ._2H3hWW_newSession,
     .wtg9ga_panelList, ._2H3hWW_panelList,
     .GAkraW_listArea, ._9lTDKa_listArea
   )::before {
     animation: none;
   }
+}
+
+/*
+ * Measured chain on 0.2.2: listArea (block, overflow hidden, content 960 in a
+ * 592 box) -> root -> regionArea -> scrollArea (the whole sidebar scroller).
+ * The list owns a shorter box already but clips instead of scrolling, and the
+ * outer scroller is what made the pane grow. Give the list the scrollbar and
+ * lock the outer one.
+ */
+html[data-fairy-skin] [class*="listArea"] {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* the wheel must not chain into the sidebar scroller when the list ends */
+  overscroll-behavior: contain !important;
+  /* no second frame inside the pane, and a clean bottom edge */
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding-bottom: 8px !important;
+}
+html[data-fairy-skin] [class*="listArea"]::before,
+html[data-fairy-skin] [class*="listArea"]::after {
+  content: none !important;
+  display: none !important;
+}
+html[data-fairy-skin] [class*="scrollArea"] {
+  overflow-y: hidden !important;
+}
+
+/* The pane keeps one radius on all four corners and clips its own content, so
+   scrolling never paints rows over the rounded top edge. */
+html[data-fairy-skin] [class*="regionArea"] {
+  margin-bottom: 10px !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+html[data-fairy-skin] [class*="panelList"] {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+/* The account card is fixed against the sidebar box: as a flow child the new
+   sidebar's flex crushed it to 22x19 and pushed the nav out of place. */
+/* The account card belongs to the running console, not the boot film: while the
+   film is up the card used to sit on top of it. */
+/*
+ * Plugin pages keep the shell's own sidebar. The skin's brand layers were sized
+ * for the chat column and landed as a striped bar over the logo there, so they
+ * are switched off whenever the page has no composer.
+ */
+/*
+ * The footer strip under the account card carried its own light glass wash, which
+ * reads as a glowing band under the card. It stays flat and transparent instead.
+ */
+/*
+ * The sidebar's scroll-fade strip (y 738..762) paints a fixed dark grey that only
+ * matches the chat palette; on plugin pages it stands out as a bright band right
+ * under the account card. It has no job here, so it paints nothing.
+ */
+html[data-fairy-skin] [class*="scrollFade"] {
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+html[data-fairy-skin] [class*="settingsArea"],
+html[data-fairy-skin] [class*="footArea"] {
+  /* fades out of the card's own colour instead of sitting lighter than it:
+     that tonal step under the card is what reads as a glow. The bottom stays
+     transparent, so the user row keeps its glass look. */
+  /* background-image: none was sitting right below the gradient and cancelling
+     it, which is why the footer never changed no matter what colour it got */
+  /* the footer keeps its own glass; what looked like a glow was a soft light
+     drawn inside this subtree, so those shadows are removed below */
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  /* measured: a 2px bright seam runs full width exactly at the card's bottom
+     edge — the divider the shell draws above the footer */
+  border-top: none !important;
+  border-image: none !important;
+}
+/* No soft light inside the footer subtree: that is what painted the halo. */
+html[data-fairy-skin] [class*="settingsArea"] *,
+html[data-fairy-skin] [class*="footArea"] * {
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  text-shadow: none !important;
+}
+html[data-fairy-skin] [class*="settingsArea"] *::before,
+html[data-fairy-skin] [class*="settingsArea"] *::after,
+html[data-fairy-skin] [class*="footArea"] *::before,
+html[data-fairy-skin] [class*="footArea"] *::after {
+  box-shadow: none !important;
+  filter: none !important;
+  display: none !important;
+}
+
+html[data-fairy-skin] [class*="settingsArea"]::before,
+html[data-fairy-skin] [class*="settingsArea"]::after,
+html[data-fairy-skin] [class*="footArea"]::before,
+html[data-fairy-skin] [class*="footArea"]::after {
+  content: none !important;
+  display: none !important;
+}
+
+html[data-fairy-skin][data-fairy-offchat] [class*="brandMark"] {
+  position: relative !important;
+  transform: none !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 38px !important;
+  max-height: 38px !important;
+  flex: 0 0 38px !important;
+  overflow: hidden !important;
+  filter: none !important;
+}
+
+html[data-fairy-skin][data-fairy-splash-caption] .fs-rail-stats {
+  display: none !important;
+}
+
+html[data-fairy-skin] .fs-rail-stats {
+  position: fixed !important;
+  left: 13px !important;
+  right: 13px !important;
+  width: auto !important;
+  bottom: 56px !important;
+  z-index: 40 !important;
+  /* the card paints 10px of padding and a 1px rim; without border-box the
+     measured width excludes them and the card overhangs the sidebar by 21px */
+  box-sizing: border-box !important;
+  margin: 0 !important;
 }
 
 /* ---- rail stats: balance + this conversation's tokens ---- */
@@ -1837,8 +1978,13 @@ html[data-fairy-skin][data-fairy-resizing] .BynINW_sidebarCol :is(
 }
 /* The blue liquid field would tint the grey; the voice card has none, so the
    balance card goes without as well. */
-html[data-fairy-skin] .fs-rail-stats::before {
+html[data-fairy-skin] .fs-rail-stats::before,
+html[data-fairy-skin] .fs-rail-stats::after {
   display: none !important;
+  content: none !important;
+  box-shadow: none !important;
+  background: none !important;
+  filter: none !important;
 }
 .fs-rs-head {
   font-size: 10px;
@@ -1989,7 +2135,7 @@ html[data-fairy-skin] .fs-rail-stats::before {
       const sidebarRoot = resolveClass(byName, groups, '2H3hWW', 'root')
       return body
         .replace(/\.BynINW_frame\b/g, ':is([data-slot="root"], #root)')
-        .replace(/\.BynINW_sidebarCol\b/g, sidebarRoot === null ? '.fs-unmapped-sidebar-col' : '.' + sidebarRoot)
+        .replace(/\[class*="sidebarCol"]\b/g, sidebarRoot === null ? '.fs-unmapped-sidebar-col' : '.' + sidebarRoot)
     }
 
     let skinIndex = { byName: new Map(), groups: new Map() }
@@ -2534,9 +2680,21 @@ html[data-fairy-skin] .fs-rail-stats::before {
           }
           paint()
           document.head.appendChild(style)
+          /*
+           * Route changes rebuild the host tree, and a rebuilt <head> drops the
+           * skin stylesheet with it: the plugin page then renders the shell's raw
+           * sidebar while our injected nodes stay behind, unstyled.
+           */
+          const ensure = () => {
+            if (style.isConnected) return
+            document.head.appendChild(style)
+          }
+          const headObserver = new MutationObserver(ensure)
+          headObserver.observe(document.head, { childList: true })
           const timer = window.setInterval(paint, 1500)
           return () => {
             window.clearInterval(timer)
+            headObserver.disconnect()
             style.remove()
           }
         }, 'fairy-splash: skin stylesheet')
@@ -2639,7 +2797,9 @@ const billingOpen = () => {
             const chat = document.querySelector('[class*="_composerSeat"], [class*="_composerStack"], [class*="_composer"]')
             if (chat === null) absent += 1
             else absent = 0
-            if (absent >= 2) open = true
+            /* The sidebar is shared by every page, so the skin stays mounted even
+               when the surface has no composer (plugin market, settings, tasks). */
+            open = false
             ticks += 1
             if (open === last) return
             last = open
@@ -2678,7 +2838,7 @@ const billingOpen = () => {
          * the broader selectors, and a build that does not still gets a surface.
          */
         effect(() => {
-          const KNOWN = '[class*="GRgSLq_card"], [class*="RlGAzG_card"], [class*="BynINW_sidebarCol"], [class*="BynINW_frame"], [class*="V4vHZW_root"], [class*="V4vHZW_root"]'
+          const KNOWN = '[class*="GRgSLq_card"], [class*="RlGAzG_card"], [class*="BynINW_sidebarCol"], [class*="BynINW_frame"], [class*="Dc7zOa_root"], [class*="xz4KEq_root"]'
           const LEGACY_CSS = `
 html[data-fairy-skin-legacy] [class*="_sidebarCol"] {
   background:
@@ -2788,7 +2948,10 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
             if (next === last) return
             last = next
             const root = document.documentElement
-            if (menu) root.setAttribute('data-fairy-menu-open', '')
+            /* Disabled: the current shell already paints its popovers above the
+               scroller, and releasing this clip made the whole conversation jump
+               up and stretch sideways when the model menu opened. */
+            if (false && menu) root.setAttribute('data-fairy-menu-open', '')
             else root.removeAttribute('data-fairy-menu-open')
             if (card) root.setAttribute('data-fairy-card-open', '')
             else root.removeAttribute('data-fairy-card-open')
@@ -2820,9 +2983,31 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
           let alignTimer = 0
           let balanceTimer = 0
           let energyTimer = 0
+          window.__fairyDiag = []
+          let diagWrites = 0
+          const diag = (message) => {
+            try {
+              window.__fairyDiag.push(message)
+              if (window.__fairyDiag.length > 40) window.__fairyDiag.shift()
+              /* nothing on screen and nothing in the title bar: the log stays in
+                 window.__fairyDiag for a console session if it is ever needed */
+              void diagWrites
+            }
+            catch (error) { /* ignore */ }
+          }
           const parseTokens = () => {
+            /*
+             * The token total lives in the composer's footer. The hashed root
+             * names below only match some shell builds; on the others the lookup
+             * returned null and the card read "—" forever. Fall back through the
+             * stable composer classes, then to the document: the pattern is
+             * specific enough ("N K/M tok", never the "tok/s" rate).
+             */
             const composer = document.querySelector('[class*="GRgSLq_root"]')
               || document.querySelector('[class*="RlGAzG_root"]')
+              || document.querySelector('[class*="composerSeat"]')
+              || document.querySelector('[class*="composerStack"]')
+              || document.body
             if (composer === null) return null
             const match = (composer.textContent || '').match(/(\d[\d.,]*)\s*([KkMmBb])?\s*tok(?!\s*\/)/)
             if (match === null) return null
@@ -2885,6 +3070,17 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
           const accumulate = () => {
             if (tokenNode === null) return
             const value = parseTokens()
+            /*
+             * The footer figure is this conversation's own total, so it wins
+             * whenever it is on screen; the endpoint is only a fallback for the
+             * compact display, which prints no total at all.
+             */
+            if (value !== null) footerFresh = Date.now()
+            if (value === null && energyFromHost) {
+              /* the composer currently shows only the rate and the cache hit;
+                 the number already on the card came from the host projection */
+              return
+            }
             const text = value === null ? '—' : formatTokens(value)
             // 10 Hz polling: only touch the DOM when the readout changes.
             if (tokenNode.textContent !== text) tokenNode.textContent = text
@@ -2967,14 +3163,62 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
              the sessions that were active since local midnight and fall back to
              the local counter when that call is unavailable. */
           let energyFromHost = false
+          let energyBusy = false
+          /*
+           * The host serves the conversation's token total at
+           * /fairy-splash/v1/usage, read from the session projection cache. This
+           * is the only source that also works in the compact performance display,
+           * where the page itself prints no token figure.
+           */
+          let usageBusy = false
+          let usageFresh = 0
+          let footerFresh = 0
+          const readUsageEndpoint = async () => {
+            if (usageBusy) return
+            usageBusy = true
+            try {
+              const response = await fetch('/fairy-splash/v1/usage', { cache: 'no-store' })
+              if (!response.ok) return
+              const payload = await response.json()
+              if (!payload || payload.ok !== true || typeof payload.tokens !== 'number') return
+              energyFromHost = true
+              usageFresh = Date.now()
+              if (footerFresh !== 0 && Date.now() - footerFresh < 4000) return
+              if (tokenNode !== null) {
+                const text = formatTokens(payload.tokens)
+                if (tokenNode.textContent !== text) tokenNode.textContent = text
+              }
+            }
+            catch (error) { /* host route unavailable */ }
+            finally { usageBusy = false }
+          }
           const readHostEnergy = async () => {
+            /* 10 Hz as requested; the guard keeps at most one request in flight so
+               a slow host cannot pile calls up */
+            if (energyBusy) return
+            energyBusy = true
             try {
               const hub = resolveRemote()
+              diag('hub=' + (hub ? 'yes' : 'no'))
               const entry = pick(hub, 'session')
+              diag('entry=' + (entry ? Object.keys(entry).slice(0, 6).join(',') : 'none'))
               const sessionService = entry && entry.service ? entry.service : entry
-              if (!sessionService || typeof sessionService.list !== 'function') return
-              const listed = await sessionService.list({})
-              const items = listed && Array.isArray(listed.items) ? listed.items : []
+              if (!sessionService || typeof sessionService.list !== 'function') {
+                diag('service missing list')
+                return
+              }
+              diag('svc keys=' + Object.keys(sessionService).slice(0, 10).join(','))
+              const listed = await sessionService.list({ limit: 50 })
+              diag('raw=' + (listed === null ? 'null' : typeof listed) + ' ' + (listed && !Array.isArray(listed) ? Object.keys(listed).slice(0, 6).join(',') : 'arr'))
+              const rawVal = listed && !Array.isArray(listed) && 'value' in listed ? listed.value : listed
+              diag('value type=' + (Array.isArray(rawVal) ? 'array(' + rawVal.length + ')' : typeof rawVal + (rawVal && typeof rawVal === 'object' ? '(' + Object.keys(rawVal).slice(0, 6).join(',') + ')' : '')))
+              /* the host wraps RPC results as { ok, value }, while some builds
+                 return { items } directly — accept both */
+              const items = Array.isArray(rawVal) ? rawVal
+                : rawVal && Array.isArray(rawVal.items) ? rawVal.items
+                : rawVal && Array.isArray(rawVal.sessions) ? rawVal.sessions
+                : []
+              diag('list items=' + items.length + ' keys=' + (listed ? Object.keys(listed).slice(0, 5).join(',') : 'null'))
               if (items.length === 0) return
               const midnight = new Date()
               midnight.setHours(0, 0, 0, 0)
@@ -2986,8 +3230,11 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
                 if (typeof item.updatedAt === 'number' && item.updatedAt < since) continue
                 try {
                   const projection = await sessionService.projections({ sessionId: item.sessionId })
-                  const values = projection && projection.values ? projection.values : projection
+                  const values = projection && projection.values ? projection.values
+                    : projection && projection.value !== undefined ? projection.value
+                    : projection
                   const usage = values && values.usage ? values.usage : null
+                  diag('proj keys=' + (pr ? Object.keys(pr).slice(0, 6).join(',') : 'null') + ' usage=' + (usage ? Object.keys(usage).join(',') : 'none'))
                   if (!usage) continue
                   const sum = typeof usage.totalTokens === 'number'
                     ? usage.totalTokens
@@ -2996,17 +3243,75 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
                 }
                 catch (error) { /* one session unreadable, keep the rest */ }
               }
+              diag('counted=' + counted + ' total=' + total)
               if (counted === 0) return
               energyFromHost = true
               if (tokenNode !== null) tokenNode.textContent = formatTokens(total)
             }
             catch (error) { /* fall back to the local counter */ }
+            finally { energyBusy = false }
           }
           const alignCard = () => {
             if (card === null || !card.isConnected) return
+            /*
+             * Plugin pages are a different surface with their own short sidebar;
+             * the console card has no correct place there, so it stays out of the
+             * way instead of landing on the nav.
+             */
+            const onChat = document.querySelector('[class*="composerSeat"], [class*="composerStack"]') !== null
+            document.documentElement.toggleAttribute('data-fairy-offchat', !onChat)
+            if (card.style.display === 'none') card.style.display = ''
             const button = document.querySelector('[class*="newSession"]')
             const parent = card.parentElement
             if (button === null || parent === null) return
+            /*
+             * Measure against the workspace region, not the sidebar column: on
+             * 0.2.2 the column can resolve to a wider wrapper, and the card then
+             * ran past the sidebar into the chat. The region is the session list
+             * box, which is exactly the width the card should match.
+             */
+            const column = document.querySelector('[class*="sidebarCol"]')
+            if (column !== null) {
+              /*
+               * Match the visible workspace box, not the region wrapper: the
+               * wrapper carries extra padding, and measuring it put the card about
+               * 10px wider than the blue panel on each side.
+               */
+              const reference = sidebarReference()
+              const region = column.querySelector('[class*="regionArea"]')
+              const base = reference !== null ? reference
+                : region !== null ? region.getBoundingClientRect()
+                : column.getBoundingClientRect()
+              const footer = document.querySelector('[class*="footerActions"]')
+              const footerTop = footer === null ? 0 : footer.getBoundingClientRect().top
+              /* the footer only counts when it really sits at the bottom; on the
+                 plugin-market view it renders mid-page and dragged the card up
+                 over the nav */
+              const atBottom = footerTop > window.innerHeight * 0.7
+              /* the card shares the workspace panel's box exactly: same left,
+                 same width, so both edges line up */
+              card.style.setProperty('left', Math.round(base.left) + 'px', 'important')
+              card.style.setProperty('width', Math.round(base.width) + 'px', 'important')
+              card.style.setProperty('right', 'auto', 'important')
+              /* seated on the footer: the 8px gap above it showed the bright wallpaper
+                 through the sidebar glass and read as a glow under the card */
+              card.style.setProperty('bottom', (atBottom ? Math.round(window.innerHeight - footerTop) : 56) + 'px', 'important')
+              /*
+               * Plugin pages render a different sidebar: no footer to anchor to and
+               * a much shorter column. If that pushed the card into the nav, fall
+               * back to the plain bottom edge instead of leaving it on the menu.
+               */
+              const placed = card.getBoundingClientRect()
+              if (placed.top < 300 || placed.height < 40) {
+                const columnBox = column.getBoundingClientRect()
+                card.style.setProperty('top', 'auto', 'important')
+                card.style.setProperty('bottom', '56px', 'important')
+                card.style.setProperty('left', Math.round(columnBox.left + 18) + 'px', 'important')
+                card.style.setProperty('right', 'auto', 'important')
+                card.style.setProperty('width', Math.round(Math.max(120, columnBox.width - 36)) + 'px', 'important')
+              }
+              return
+            }
             const target = button.getBoundingClientRect()
             const parentRect = parent.getBoundingClientRect()
             if (target.width < 80) return
@@ -3015,6 +3320,85 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
             const padRight = Number.parseFloat(style.paddingRight) || 0
             card.style.marginLeft = Math.max(0, Math.round(target.left - parentRect.left - padLeft)) + 'px'
             card.style.marginRight = Math.max(0, Math.round(parentRect.right - target.right - padRight)) + 'px'
+          }
+          /*
+           * The workspace pane ends where the account card begins: its height is
+           * measured from the card, not from a hard-coded offset, so the list
+           * never runs under the card and the sidebar itself never scrolls.
+           */
+          /*
+           * Measured: each workspace card sizes its list to its content
+           * (listArea 424/424), so nothing inside it can scroll and the whole
+           * sidebar scroller moves instead. Cap every list at the room between
+           * its own top and the account card, and let that box scroll.
+           */
+          /*
+           * One reference for the whole sidebar: the nav card (plugin / market /
+           * automation / more). The new-session button, the workspace pane and the
+           * account card all copy its left edge and width, so the four cards line
+           * up exactly instead of each keeping its own margin.
+           */
+          const sidebarReference = () => {
+            const entries = document.querySelectorAll('[class*="panelEntry"]')
+            if (entries.length === 0) return null
+            const last = entries[entries.length - 1]
+            let node = entries[0].parentElement
+            while (node !== null && node !== document.body) {
+              if (node.contains(last)) {
+                const rect = node.getBoundingClientRect()
+                if (rect.width > 180 && rect.width < 320) return rect
+              }
+              node = node.parentElement
+            }
+            return null
+          }
+          const shift = (element, reference) => {
+            const box = element.getBoundingClientRect()
+            const applied = Number(element.dataset.fairyMargin || '0')
+            const restingLeft = box.left - applied
+            const margin = Math.round(reference.left - restingLeft)
+            const width = Math.round(reference.width)
+            if (Math.abs(box.width - width) <= 1 && Math.abs(applied - margin) <= 1) return
+            element.dataset.fairyMargin = String(margin)
+            element.style.setProperty('width', width + 'px', 'important')
+            element.style.setProperty('margin-left', margin + 'px', 'important')
+            element.style.setProperty('margin-right', '0px', 'important')
+          }
+          const alignSidebarCards = () => {
+            if (document.querySelector('[class*="composerSeat"], [class*="composerStack"]') === null) return
+            const reference = sidebarReference()
+            if (reference === null) return
+            const newSession = document.querySelector('[class*="newSession"]')
+            if (newSession !== null) shift(newSession, reference)
+            for (const pane of document.querySelectorAll('[class*="regionArea"]')) shift(pane, reference)
+
+            /*
+             * No outer light on any of the four: the cards read as flat panels and
+             * their edges line up without a halo blurring the seam.
+             */
+            const targets = [newSession, ...[...document.querySelectorAll('[class*="regionArea"]')], card]
+            for (const element of targets) {
+              if (element === null || !element.isConnected) continue
+              if (element.dataset.fairyGlow === 'none') continue
+              element.dataset.fairyGlow = 'none'
+              element.style.setProperty('box-shadow', 'none', 'important')
+              element.style.setProperty('filter', 'none', 'important')
+            }
+          }
+          const fitWorkspaceLists = () => {
+            if (card === null || !card.isConnected) return
+            const cardTop = card.getBoundingClientRect().top
+            if (cardTop <= 0) return
+            for (const list of document.querySelectorAll('[class*="listArea"]')) {
+              const box = list.getBoundingClientRect()
+              if (box.top <= 0 || box.width <= 0) continue
+              const room = Math.max(96, Math.round(cardTop - box.top - 8))
+              if (list.dataset.fairyRoom === String(room)) continue
+              list.dataset.fairyRoom = String(room)
+              list.style.setProperty('max-height', room + 'px', 'important')
+              list.style.setProperty('overflow-y', 'auto', 'important')
+              list.style.setProperty('overscroll-behavior', 'contain', 'important')
+            }
           }
           const mount = () => {
             if (card !== null && card.isConnected) return true
@@ -3033,12 +3417,24 @@ html[data-fairy-skin-legacy] [class*="_scrollBody"] {
             balanceNode = card.querySelector('[data-fs-balance]')
             tokenNode = card.querySelector('[data-fs-tokens]')
             alignCard()
+            alignSidebarCards()
+            fitWorkspaceLists()
             window.addEventListener('resize', alignCard)
             window.clearInterval(alignTimer)
-            alignTimer = window.setInterval(alignCard, 1200)
+            alignTimer = window.setInterval(() => {
+              alignCard()
+              alignSidebarCards()
+              fitWorkspaceLists()
+            }, 1000)
             window.clearInterval(balanceTimer)
             balanceTimer = window.setInterval(() => { void readBalance() }, 30000)
             void readBalance()
+            window.clearInterval(energyTimer)
+            void readUsageEndpoint()
+            energyTimer = window.setInterval(() => {
+              if (document.hidden) return
+              void readUsageEndpoint()
+            }, 100)
             return true
           }
           const tick = () => {

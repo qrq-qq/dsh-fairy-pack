@@ -1,5 +1,7 @@
-import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { appendFileSync, createReadStream, mkdirSync } from 'node:fs'
+import { readdir, readFile, stat } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /** The splash assets are public, inert files served for this bundle only. */
@@ -71,6 +73,54 @@ function parseRange(value, size) {
   return { start, end: Math.min(end, size - 1) }
 }
 
+const USAGE_ROUTE = '/fairy-splash/v1/usage'
+const PROJECTION_CACHE = join(homedir(), '.dsh', 'storages', 'session_projcache', 'sessions')
+
+/*
+ * Token total for the conversation that is currently being written. The shell
+ * keeps one projection cache file per session and rewrites the active one on
+ * every step, so the newest file is the open conversation. Reading it here means
+ * the figure is available in the compact performance display too, where the page
+ * itself never prints a token total.
+ */
+async function readUsage() {
+  let names
+  try {
+    names = await readdir(PROJECTION_CACHE)
+  }
+  catch {
+    return { ok: false, reason: 'no-cache' }
+  }
+  const files = []
+  for (const name of names) {
+    if (!name.endsWith('.json')) continue
+    const file = join(PROJECTION_CACHE, name)
+    try {
+      const info = await stat(file)
+      files.push({ file, mtime: info.mtimeMs, size: info.size })
+    }
+    catch { /* file vanished */ }
+  }
+  files.sort((a, b) => b.mtime - a.mtime)
+  for (const entry of files.slice(0, 3)) {
+    try {
+      const parsed = JSON.parse(await readFile(entry.file, 'utf8'))
+      const totals = parsed && parsed.record && parsed.record.rows
+        && parsed.record.rows.tokenUsage && parsed.record.rows.tokenUsage.val
+        && parsed.record.rows.tokenUsage.val.totals
+      if (!totals) continue
+      const tokens = (Number(totals.uncachedInputTokens) || 0)
+        + (Number(totals.outputTokens) || 0)
+        + (Number(totals.cacheReadTokens) || 0)
+        + (Number(totals.cacheWriteTokens) || 0)
+      if (tokens <= 0) continue
+      return { ok: true, tokens, session: entry.file.split(/[\\/]/).pop().replace('.json', ''), mtime: entry.mtime }
+    }
+    catch { /* unreadable, try the next one */ }
+  }
+  return { ok: false, reason: 'no-usage' }
+}
+
 async function serve(req, res) {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -82,7 +132,7 @@ async function serve(req, res) {
     res.end()
     return
   }
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
+  if (req.method !== 'GET' && req.method !== 'HEAD' && !(req.url || '').startsWith('/fairy-splash/v1/probe')) {
     res.writeHead(405, { Allow: 'GET, HEAD, OPTIONS' })
     res.end()
     return
@@ -95,6 +145,39 @@ async function serve(req, res) {
   catch {
     res.writeHead(400)
     res.end()
+    return
+  }
+
+  if (pathname === '/fairy-splash/v1/probe' && req.method === 'POST') {
+    let body = ''
+    req.on('data', (chunk) => { body += chunk })
+    req.on('end', () => {
+      try {
+        const dir = join(homedir(), 'Documents', 'deepseek-harness', 'default-workspace', '.tools')
+        mkdirSync(dir, { recursive: true })
+        appendFileSync(join(dir, 'probe-dump.txt'), '=== ' + new Date().toISOString() + ' ===' + String.fromCharCode(10) + body + String.fromCharCode(10))
+        res.writeHead(200, { 'Access-Control-Allow-Origin': '*' })
+        res.end('ok')
+      }
+      catch (error) {
+        res.writeHead(500)
+        res.end(String(error && error.message))
+      }
+    })
+    return
+  }
+
+  if (pathname === USAGE_ROUTE) {
+    const payload = await readUsage()
+    const body = JSON.stringify(payload)
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*',
+      'Content-Length': String(Buffer.byteLength(body)),
+    })
+    if (req.method === 'HEAD') res.end()
+    else res.end(body)
     return
   }
 

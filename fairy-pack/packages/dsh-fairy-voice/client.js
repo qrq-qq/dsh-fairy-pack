@@ -577,7 +577,7 @@ window.__ModuleLoader__.load({
       const style = document.createElement('style')
       style.id = 'fairy-voice-rail-style'
       style.textContent = [
-        '[data-fairy-voice-rail]{position:fixed;left:0;top:0;width:124px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:stretch;gap:0;padding:4px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#31363e 0%,#282d34 54%,#22262d 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 6px 14px rgba(0,0,0,.26);color:#e6ecf5;font-size:12px;line-height:1.4;z-index:60;pointer-events:none}',
+        '[data-fairy-voice-rail]{position:fixed;left:0;top:0;width:124px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:stretch;gap:0;padding:4px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#31363e 0%,#282d34 54%,#22262d 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 6px 14px rgba(0,0,0,.26);color:#e6ecf5;font-size:12px;line-height:1.4;z-index:60;pointer-events:none;opacity:0;transition:opacity 120ms ease;will-change:transform,height,opacity}',
         '[data-fairy-voice-rail] .fv-row{flex:1 1 0;display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;min-height:0;color:#c9d3e0;pointer-events:none}',
         '[data-fairy-voice-rail] .fv-pill,[data-fairy-voice-rail] input[type=range]{pointer-events:auto}',
         '[data-fairy-voice-rail] .fv-label{display:inline-flex;align-items:center;gap:5px;color:#c9d3e0;white-space:nowrap}',
@@ -826,7 +826,14 @@ window.__ModuleLoader__.load({
          * to drag the rail into the window's top-left corner. Treat both as
          * "someone else owns the area" and hide, exactly like approvals.
          */
-        const askCard = document.querySelector('[class*="_question"], [class*="_questions"]')
+        /*
+         * Only look inside the composer. On 0.2.2 the transcript itself renders
+         * something whose class contains "_question", and a document-wide lookup
+         * matched it a few seconds in — the rail reported "asking" and hid itself
+         * in every conversation while the new-session screen stayed fine.
+         */
+        const askScope = seat === null ? document : seat
+        const askCard = askScope.querySelector('[class*="_question"], [class*="_questions"]')
         const asking = askCard !== null && askCard.getBoundingClientRect().height > 40
         /*
          * Same story under a different name: on another build the card may only
@@ -842,7 +849,9 @@ window.__ModuleLoader__.load({
          */
         const booting = document.documentElement.hasAttribute('data-fairy-splash-caption')
         const hide = () => {
-          panel.host.style.display = 'none'
+          /* leave the screen immediately: a fade here is what read as lag */
+          panel.host.style.transition = 'none'
+          panel.host.style.opacity = '0'
           /* Force a re-place when the composer comes back. */
           panel.lastKey = ''
         }
@@ -875,7 +884,7 @@ window.__ModuleLoader__.load({
          * belongs, so step out while the column is that narrow. With no panel the
          * gap between the capsule and the window edge is only the padding.
          */
-        if (window.innerWidth - capsuleBox.right > 220) {
+        if (window.innerWidth - capsuleBox.right > 180) {
           hide()
           return
         }
@@ -906,9 +915,14 @@ window.__ModuleLoader__.load({
         if (panel.lastKey === key && panel.host.style.visibility === 'visible') return
         panel.lastKey = key
         panel.host.style.height = height + 'px'
-        panel.host.style.top = top + 'px'
-        panel.host.style.left = left + 'px'
+        /* composited movement: translate is repainted on the GPU, while animating
+           top/left forces a layout pass every frame */
+        panel.host.style.top = '0px'
+        panel.host.style.left = '0px'
+        panel.host.style.transform = 'translate3d(' + left + 'px,' + top + 'px,0)'
         panel.host.style.visibility = 'visible'
+        if (panel.host.style.transition === 'none') panel.host.style.transition = ''
+        panel.host.style.opacity = '1'
       }
       const attach = () => {
         const seat = document.querySelector('[class*="_composerSeat"], [class*="_composerStack"]')
@@ -948,6 +962,13 @@ window.__ModuleLoader__.load({
       const observer = new MutationObserver(kick)
       observer.observe(document.body, { childList: true, subtree: true })
       /*
+       * The rail stays hidden while the boot film is up, and it used to come back
+       * only on the next 1.2s poll — the card appeared about a second after the
+       * window. Watch the film's attribute so it returns in the same frame.
+       */
+      const bootObserver = new MutationObserver(() => attach())
+      bootObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-fairy-splash-caption'] })
+      /*
        * Resizing the app moved the capsule but the card kept its old viewport
        * position until the next poll, which read as the card vanishing for a
        * second. Both the window resize and the capsule's own box changes now
@@ -969,11 +990,50 @@ window.__ModuleLoader__.load({
       }
       watchCapsule()
       const repin = window.setInterval(watchCapsule, 2000)
-      const timer = window.setInterval(attach, 1200)
+      let fastTicks = 0
+      const fastTimer = window.setInterval(() => {
+        attach()
+        fastTicks += 1
+        if (fastTicks >= 20) window.clearInterval(fastTimer)
+      }, 80)
+      /*
+       * The right-hand panel animates open/closed; in those 300ms the rail has to
+       * track the composer every frame, or it appears late and lands off-position.
+       */
+      let burstUntil = 0
+      const burstStep = () => {
+        attach()
+        if (performance.now() < burstUntil) window.requestAnimationFrame(burstStep)
+      }
+      const burst = () => {
+        burstUntil = performance.now() + 700
+        if (burstUntil - 700 < 0) return
+        window.requestAnimationFrame(burstStep)
+      }
+      const resizeObserver = new ResizeObserver(burst)
+      resizeObserver.observe(document.body)
+      window.addEventListener('resize', burst)
+            /*
+             * Track every frame while the rail is on screen: the side panel animates
+             * its width and no observer fires per frame for that, which is why the
+             * card looked frozen and then jumped.
+             */
+            let rafId = 0
+            const frame = () => {
+              attach()
+              rafId = window.requestAnimationFrame(frame)
+            }
+            rafId = window.requestAnimationFrame(frame)
+            const timer = window.setInterval(attach, 1200)
 
       return () => {
         window.clearInterval(timer)
+        window.cancelAnimationFrame(rafId)
         window.clearInterval(repin)
+        window.clearInterval(fastTimer)
+        bootObserver.disconnect()
+        resizeObserver.disconnect()
+        window.removeEventListener('resize', burst)
         window.removeEventListener('resize', relocate)
         if (boxObserver !== null) boxObserver.disconnect()
         observer.disconnect()
